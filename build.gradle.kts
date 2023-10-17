@@ -26,6 +26,11 @@ dependencies {
     implementation("com.h2database:h2:2.1.210")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.slf4j:slf4j-simple:2.0.9")
+    // JWT
+    implementation("com.auth0:java-jwt:4.2.1")
+
+    // BCcrypt
+    implementation("org.mindrot:jbcrypt:0.4")
 }
 
 tasks.test {

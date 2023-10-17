@@ -1,10 +1,10 @@
-En el directorio data tienes un csv de muestra de Funkos. Con la siguiente estructura:
+- [x] Estructura funkos csv
 
-* COD: En formato UUID v4
-* NOMBRE: Cadena de caracteres
-* MODELO: Solo tiene estos valores: MARVEL, DISNEY, ANIME u OTROS
-* PRECIO: Moneda con dos decimales.
-* FECHA\_LANZAMIENTO: Fecha en formato YYYY-MM-DD siguiendo ISO-8601
+  * COD: En formato UUID v4
+  * NOMBRE: Cadena de caracteres
+  * MODELO: Solo tiene estos valores: MARVEL, DISNEY, ANIME u OTROS
+  * PRECIO: Moneda con dos decimales.
+  * FECHA\_LANZAMIENTO: Fecha en formato YYYY-MM-DD siguiendo ISO-8601
 
 Antes de procesarlos ten en cuenta que puede haber errores en los campos.
 
