@@ -1,13 +1,18 @@
 package server;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import common.Login;
 import common.Request;
 import common.Response;
 import enums.Modelo;
+import exceptions.Server.ServerException;
 import models.Funko;
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import repositories.funkos.FunkoRepositoryImpl;
+import server.repositories.UserRepository;
 import server.services.TokenService;
 import services.database.DataBaseManager;
 import services.funkos.FunkosNotificationsImpl;
@@ -82,9 +87,10 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void handleRequest(Request request) {
+    private void handleRequest(Request request) throws ServerException {
         logger.debug("Procesando petición del cliente nº: " + clientNumber);
         switch (request.type()) {
+            case LOGIN -> processLogin(request);
             case FINDALL -> processFindAll(request);
             case FINDBYCODE -> processFindByCode(request);
             case FINDBYMODELO -> processFindByModelo(request);
@@ -95,6 +101,24 @@ public class ClientHandler extends Thread {
             case EXIT -> processExit();
             default -> new Response<>(Response.Status.ERROR, "Petición no válida", LocalDateTime.now().toString());
         }
+    }
+
+    private void processLogin(Request request) throws ServerException {
+        logger.debug("Petición de login recibida: " + request);
+
+        Login login = gson.fromJson(String.valueOf(request.content()), new TypeToken<Login>() {
+        }.getType());
+
+        var user = UserRepository.getInstance().findByUsername(login.username());
+        if (user.isEmpty() || !BCrypt.checkpw(login.password(), user.get().password())) {
+            logger.warn("Usuario no encontrado o falla la contraseña");
+            throw new ServerException("Usuario o contraseña incorrectos");
+        }
+
+        var token = TokenService.getInstance().createToken(user.get(), Server.TOKEN_SECRET, Server.TOKEN_EXPIRATION);
+
+        logger.debug("Respuesta enviada: " + token);
+        out.println(gson.toJson(new Response(Response.Status.TOKEN, token, LocalDateTime.now().toString())));
     }
 
     private void processFindAll(Request<String> request) {

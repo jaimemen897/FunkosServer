@@ -5,8 +5,11 @@ import adapters.LocalDateTimeAdapter;
 import adapters.UuidAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import common.Login;
 import common.Request;
+import common.Response;
+import exceptions.Client.ClientException;
 import lombok.extern.java.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +25,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import static common.Request.Type.LOGIN;
 
 public class Client {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
@@ -121,11 +126,35 @@ public class Client {
         }
     }
 
-    private String sendRequestLogin() {
-        String request = gson.toJson(new Login("eva", "eva1234"));
-        Request req = new Request(Login, request);
+    private String sendRequestLogin() throws ClientException{
+        String myToken = null;
+        var loginJson = gson.toJson(new Login("eva", "eva1234"));
+        Request request = new Request(LOGIN, loginJson, null, LocalDateTime.now().toString());
+        System.out.println("Petición enviada de tipo: " + LOGIN);
+        logger.debug("Petición enviada: " + request);
         out.println(gson.toJson(request));
-        System.out.println("🔵 Enviando petición de login");
+
+        try {
+
+            Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+            }.getType());
+
+            logger.debug("Respuesta recibida: " + response.toString());
+
+            System.out.println("Respuesta recibida de tipo: " + response.status());
+
+            switch (response.status()) {
+                case TOKEN -> {
+                    System.out.println("🟢 Mi token es: " + response.content());
+                    myToken = (String) response.content();
+                }
+                default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+
+            }
+        } catch (IOException e) {
+            logger.error("Error: " + e.getMessage());
+        }
+        return myToken;
     }
 
 
