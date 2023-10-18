@@ -128,7 +128,7 @@ public class Client {
         System.out.println("🔵 Enviando petición de login");
     }
 
-    public static void main(String[] args) {
+
     /*public static void main(String[] args) {
         try {
             String keyFile = "./cert/client_keystore.p12";
