@@ -5,6 +5,9 @@ import adapters.LocalDateTimeAdapter;
 import adapters.UuidAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import common.Login;
+import common.Request;
+import lombok.extern.java.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +44,7 @@ public class Client {
         }
     }
 
-    public void start() throws IOException{
+    public void start() throws IOException {
         try {
             openConnection();
         } catch (IOException e) {
@@ -72,9 +75,15 @@ public class Client {
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         System.out.println("✅ Cliente conectado a " + HOST + ":" + PORT);
-
         infoSession(socket);
 
+    }
+
+    private String sendRequestLogin() {
+        String request = gson.toJson(new Login("eva", "eva1234"));
+        Request req = new Request(Login, request);
+        out.println(gson.toJson(request));
+        System.out.println("🔵 Enviando petición de login");
     }
 
     public static void main(String[] args) {
