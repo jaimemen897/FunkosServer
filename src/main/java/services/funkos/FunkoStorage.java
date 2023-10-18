@@ -6,4 +6,6 @@ import reactor.core.publisher.Mono;
 
 public interface FunkoStorage {
     Flux<Funko> loadCsv();
+
+    Mono<Void> exportJson(String ruta);
 }
