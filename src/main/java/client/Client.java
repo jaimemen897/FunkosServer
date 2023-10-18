@@ -5,6 +5,9 @@ import adapters.LocalDateTimeAdapter;
 import adapters.UuidAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import common.Login;
+import common.Request;
+import lombok.extern.java.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import services.PropertiesReader;
@@ -118,6 +121,14 @@ public class Client {
         }
     }
 
+    private String sendRequestLogin() {
+        String request = gson.toJson(new Login("eva", "eva1234"));
+        Request req = new Request(Login, request);
+        out.println(gson.toJson(request));
+        System.out.println("🔵 Enviando petición de login");
+    }
+
+    public static void main(String[] args) {
     /*public static void main(String[] args) {
         try {
             String keyFile = "./cert/client_keystore.p12";
