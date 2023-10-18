@@ -6,7 +6,7 @@ import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Result;
 import models.Funko;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFactory;;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import services.database.DataBaseManager;
@@ -21,6 +21,11 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     private final Logger logger = LoggerFactory.getLogger(FunkoRepositoryImpl.class);
     private final ConnectionPool connectionFactory;
     private final FunkoStorageImpl funkoStorage = FunkoStorageImpl.getInstance();
+
+    private static final String LOG_NAME = "nombre";
+    private static final String LOG_MODELO = "modelo";
+    private static final String LOG_PRECIO= "precio";
+    private static final String LOG_FECHA_LANZAMIENTO = "fechaLanzamiento";
 
     private FunkoRepositoryImpl(DataBaseManager db) {
         this.connectionFactory = db.getConnectionPool();
@@ -86,10 +91,10 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                         Funko.builder()
                                 .id2(fila.get("id2", Long.class))
                                 .cod(UUID.fromString(fila.get("cod", String.class)))
-                                .nombre(fila.get("nombre", String.class))
-                                .modelo(Modelo.valueOf(fila.get("modelo", String.class)))
-                                .precio(fila.get("precio", Float.class).doubleValue())
-                                .fechaLanzamiento(fila.get("fechaLanzamiento", LocalDate.class))
+                                .nombre(fila.get(LOG_NAME, String.class))
+                                .modelo(Modelo.valueOf(fila.get(LOG_MODELO, String.class)))
+                                .precio(fila.get(LOG_PRECIO, Float.class).doubleValue())
+                                .fechaLanzamiento(fila.get(LOG_FECHA_LANZAMIENTO, LocalDate.class))
                                 .build()
                 ))),
                 Connection::close
@@ -108,10 +113,10 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                         Funko.builder()
                                 .id2(fila.get("id2", Long.class))
                                 .cod(UUID.fromString(fila.get("cod", String.class)))
-                                .nombre(fila.get("nombre", String.class))
-                                .modelo(Modelo.valueOf(fila.get("modelo", String.class)))
-                                .precio(fila.get("precio", Float.class).doubleValue())
-                                .fechaLanzamiento(fila.get("fechaLanzamiento", LocalDate.class))
+                                .nombre(fila.get(LOG_NAME, String.class))
+                                .modelo(Modelo.valueOf(fila.get(LOG_MODELO, String.class)))
+                                .precio(fila.get(LOG_PRECIO, Float.class).doubleValue())
+                                .fechaLanzamiento(fila.get(LOG_FECHA_LANZAMIENTO, LocalDate.class))
                                 .build()
                 )),
                 Connection::close
@@ -160,10 +165,10 @@ public class FunkoRepositoryImpl implements FunkoRepository {
                         Funko.builder()
                                 .id2(fila.get("id2", Long.class))
                                 .cod(UUID.fromString(fila.get("cod", String.class)))
-                                .nombre(fila.get("nombre", String.class))
-                                .modelo(Modelo.valueOf(fila.get("modelo", String.class)))
-                                .precio(fila.get("precio", Float.class).doubleValue())
-                                .fechaLanzamiento(fila.get("fechaLanzamiento", LocalDate.class))
+                                .nombre(fila.get(LOG_NAME, String.class))
+                                .modelo(Modelo.valueOf(fila.get(LOG_MODELO, String.class)))
+                                .precio(fila.get(LOG_PRECIO, Float.class).doubleValue())
+                                .fechaLanzamiento(fila.get(LOG_FECHA_LANZAMIENTO, LocalDate.class))
                                 .build()
                 )),
                 Connection::close

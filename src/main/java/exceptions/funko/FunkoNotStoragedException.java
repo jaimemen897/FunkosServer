@@ -1,4 +1,4 @@
-package exceptions.Funko;
+package exceptions.funko;
 
 public class FunkoNotStoragedException extends FunkoException {
     public FunkoNotStoragedException(String message) {

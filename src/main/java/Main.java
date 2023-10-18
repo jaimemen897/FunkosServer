@@ -1,6 +1,6 @@
 import controllers.FunkoController;
-import exceptions.File.ErrorInFile;
-import exceptions.File.NotFoundFile;
+import exceptions.file.ErrorInFile;
+import exceptions.file.NotFoundFile;
 import repositories.funkos.FunkoRepositoryImpl;
 import routes.Routes;
 import services.database.DataBaseManager;
@@ -84,7 +84,7 @@ public class Main {
                 () -> System.out.println("Obtención de funkos completada")
         );
 
-        funkoController.exportJson(routes.getRouteFunkosJson());
+        //funkoController.exportJson(ROUTE_FUNKO_JSON());
         System.exit(0);
     }
 }

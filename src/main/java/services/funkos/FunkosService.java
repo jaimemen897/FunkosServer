@@ -1,7 +1,7 @@
 package services.funkos;
 
-import exceptions.Funko.FunkoNotFoundException;
-import exceptions.Funko.FunkoNotStoragedException;
+import exceptions.funko.FunkoNotFoundException;
+import exceptions.funko.FunkoNotStoragedException;
 import models.Funko;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
