@@ -1,5 +1,7 @@
 package models;
 
+import adapters.LocalDateAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import enums.Modelo;
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +12,11 @@ import java.util.UUID;
 
 @Data
 @Builder
+@JsonAdapter(LocalDateAdapter.class)
 public class Funko {
+
     private final UUID cod;
+    private final Long id2;
     private final LocalDate fechaLanzamiento;
     private String nombre;
     private Modelo modelo;
