@@ -97,6 +97,75 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     }
 
     @Override
+    public Mono<Funko> findByCodigo(UUID code){
+        logger.debug("Buscando funko por codigo: " + code);
+        String query = "SELECT * FROM FUNKOS WHERE cod = ?";
+        return Mono.usingWhen(
+                connectionFactory.create(),
+                connection -> Mono.from(connection.createStatement(query)
+                        .bind(0, code.toString())
+                        .execute()
+                ).flatMap(result -> Mono.from(result.map((fila, datos) ->
+                        Funko.builder()
+                                .id2(fila.get("id2", Long.class))
+                                .cod(UUID.fromString(fila.get("cod", String.class)))
+                                .nombre(fila.get("nombre", String.class))
+                                .modelo(Modelo.valueOf(fila.get("modelo", String.class)))
+                                .precio(fila.get("precio", Float.class).doubleValue())
+                                .fechaLanzamiento(fila.get("fechaLanzamiento", LocalDate.class))
+                                .build()
+                ))),
+                Connection::close
+        );
+    }
+
+    @Override
+    public Flux<Funko> findByModelo(Modelo modelo){
+        logger.debug("Buscando funko por modelo: " + modelo);
+        String query = "SELECT * FROM FUNKOS WHERE modelo = ?";
+        return Flux.usingWhen(
+                connectionFactory.create(),
+                connection -> Flux.from(connection.createStatement(query)
+                        .bind(0, modelo.toString())
+                        .execute()
+                ).flatMap(result -> result.map((fila, datos) ->
+                        Funko.builder()
+                                .id2(fila.get("id2", Long.class))
+                                .cod(UUID.fromString(fila.get("cod", String.class)))
+                                .nombre(fila.get("nombre", String.class))
+                                .modelo(Modelo.valueOf(fila.get("modelo", String.class)))
+                                .precio(fila.get("precio", Float.class).doubleValue())
+                                .fechaLanzamiento(fila.get("fechaLanzamiento", LocalDate.class))
+                                .build()
+                )),
+                Connection::close
+        );
+    }
+
+    @Override
+    public Flux<Funko> findByReleaseDate(LocalDate fecha){
+        logger.debug("Buscando funko por fecha de lanzamiento: " + fecha);
+        String query = "SELECT * FROM FUNKOS WHERE fechaLanzamiento = ?";
+        return Flux.usingWhen(
+                connectionFactory.create(),
+                connection -> Flux.from(connection.createStatement(query)
+                        .bind(0, fecha)
+                        .execute()
+                ).flatMap(result -> result.map((fila, datos) ->
+                        Funko.builder()
+                                .id2(fila.get("id2", Long.class))
+                                .cod(UUID.fromString(fila.get("cod", String.class)))
+                                .nombre(fila.get("nombre", String.class))
+                                .modelo(Modelo.valueOf(fila.get("modelo", String.class)))
+                                .precio(fila.get("precio", Float.class).doubleValue())
+                                .fechaLanzamiento(fila.get("fechaLanzamiento", LocalDate.class))
+                                .build()
+                )),
+                Connection::close
+        );
+    }
+
+    @Override
     public Flux<Funko> findAll() {
         logger.debug("Buscando todos los funkos");
         String query = "SELECT * FROM FUNKOS";

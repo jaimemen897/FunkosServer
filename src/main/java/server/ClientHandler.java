@@ -1,20 +1,24 @@
 package server;
 
-
 import com.google.gson.Gson;
 import common.Request;
 import common.Response;
-import common.User;
+import enums.Modelo;
+import models.Funko;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import server.repositories.UserRepository;
+import repositories.funkos.FunkoRepositoryImpl;
 import server.services.TokenService;
+import services.database.DataBaseManager;
+import services.funkos.FunkosNotificationsImpl;
+import services.funkos.FunkosServiceImpl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,6 +28,7 @@ public class ClientHandler extends Thread {
     private final Gson gson;
     private final long clientNumber;
     private final TokenService tokenService;
+    private final FunkosServiceImpl funkosService;
     BufferedReader in;
     PrintWriter out;
 
@@ -32,6 +37,7 @@ public class ClientHandler extends Thread {
         this.gson = new Gson();
         this.clientNumber = clientNumber;
         this.tokenService = TokenService.getInstance();
+        this.funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
     }
 
     public void openConnection() {
@@ -76,19 +82,18 @@ public class ClientHandler extends Thread {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void handleRequest(Request<?> request) {
+    private void handleRequest(Request request) {
         logger.debug("Procesando petición del cliente nº: " + clientNumber);
         switch (request.type()) {
-            case FINDALL -> logger.debug("Petición de búsqueda de todos los registros");
-            case FINDBYCODE -> logger.debug("Petición de búsqueda por código");
-            case FINDBYMODELO -> logger.debug("Petición de búsqueda por modelo");
-            case FINDBYRELEASEDATE -> logger.debug("Petición de búsqueda por fecha de lanzamiento");
-            case INSERT -> logger.debug("Petición de inserción de un registro");
-            case UPDATE -> logger.debug("Petición de actualización de un registro");
-            case DELETE -> logger.debug("Petición de borrado de un registro");
-            case EXIT -> logger.debug("Petición de salida del cliente nº: " + clientNumber);
-            default -> logger.debug("Petición no reconocida");
+            case FINDALL -> processFindAll(request);
+            case FINDBYCODE -> processFindByCode(request);
+            case FINDBYMODELO -> processFindByModelo(request);
+            case FINDBYRELEASEDATE -> processByReleaseDate(request);
+            case INSERT -> processInsert(request);
+            case UPDATE -> processUpdate(request);
+            case DELETE -> processDelete(request);
+            case EXIT -> processExit();
+            default -> new Response<>(Response.Status.ERROR, "Petición no válida", LocalDateTime.now().toString());
         }
     }
 
@@ -97,31 +102,133 @@ public class ClientHandler extends Thread {
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
-            out.println(gson.toJson(new Response<>(Response.Status.OK, LocalDateTime.now().toString(), LocalDateTime.now().toString())));
+            funkosService.findAll().collectList().subscribe(funkos -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkos, LocalDateTime.now().toString())));
+            });
         } else {
             logger.warn("Token no válido");
             out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
         }
     }
 
-    private void processDelete(Request<String> request) {
-        logger.debug("Petición de delete recibida: " + request);
+    private void processFindByCode(Request<UUID> request) {
+        logger.debug("Petición de obtener un funko por código recibida: " + request);
         var token = request.token();
-        if (TokenService.getInstance().verifyToken(token, Server.TOKEN_SECRET)) {
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
-            var claims = TokenService.getInstance().getClaims(token, Server.TOKEN_SECRET);
-            var id = claims.get("userid").asInt();
-            var user = UserRepository.getInstance().findById(id);
-            if (user.isPresent() && user.get().role().equals(User.Role.ADMIN)) {
-                logger.debug("Usuario válido y rol admin");
-                out.println(gson.toJson(new Response<>(Response.Status.OK, UUID.randomUUID().toString(), LocalDateTime.now().toString())));
-            } else {
-                logger.warn("Usuario no válido");
-                out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Usuario no válido o no tiene permisos", LocalDateTime.now().toString())));
-            }
+            var id = request.content();
+            funkosService.findByCodigo(id).subscribe(funko -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funko, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al buscar el funko por código: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Error al buscar el funko por código: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
         } else {
             logger.warn("Token no válido");
             out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
         }
+    }
+
+    private void processFindByModelo(Request<Modelo> request) {
+        logger.debug("Petición de obtener un funko por modelo recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            var modelo = request.content();
+            funkosService.findByModelo(modelo).collectList().subscribe(funkos -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkos, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al buscar el funko por modelo: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Error al buscar el funko por modelo: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processByReleaseDate(Request<LocalDate> request) {
+        logger.debug("Petición de obtener un funko por fecha de lanzamiento recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            var fecha = request.content();
+            funkosService.findByReleaseDate(fecha).collectList().subscribe(funkos -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkos, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al buscar el funko por fecha de lanzamiento: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Error al buscar el funko por fecha de lanzamiento: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processInsert(Request<Funko> request) {
+        logger.debug("Petición de insertar un registro recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            var funko = request.content();
+            funkosService.saveWithNoNotifications(funko).subscribe(funkoInsert -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkoInsert, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al insertar el funko: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Error al insertar el funko: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processUpdate(Request<Funko> request) {
+        logger.debug("Petición de actualizar un registro recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            var funko = request.content();
+            funkosService.updateWithNoNotifications(funko).subscribe(funkoUpdate -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkoUpdate, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al actualizar el funko: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Error al actualizar el funko: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processDelete(Request<Long> request) {
+        logger.debug("Petición de borrar un registro recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            var id = request.content();
+            funkosService.deleteByIdWithoutNotification(id).subscribe(funkoDelete -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkoDelete, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al borrar el funko: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Error al borrar el funko: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(Response.Status.ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processExit() {
+        logger.debug("Petición de salida recibida");
+        out.println(gson.toJson(new Response<>(Response.Status.EXIT, "Saliendo del servidor", LocalDateTime.now().toString())));
+        closeConnection();
     }
 }
