@@ -17,20 +17,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class FunkosServiceImpl implements FunkosService {
-
     private static FunkosServiceImpl instance;
     private final FunkoCache cache;
     private final Logger logger = LoggerFactory.getLogger(FunkosServiceImpl.class);
     private final FunkoRepositoryImpl funkoRepository;
     private final FunkosNotifications notification;
     private final FunkoStorageImpl funkoStorage = FunkoStorageImpl.getInstance();
-
+    private static final String NOT_FOUND = "no encontrado";
 
     private FunkosServiceImpl(FunkoRepositoryImpl funkoRepository, FunkosNotifications notification) {
         this.funkoRepository = funkoRepository;
         this.cache = new FunkoCacheImpl();
         this.notification = notification;
-
     }
 
     public static synchronized FunkosServiceImpl getInstance(FunkoRepositoryImpl funkoRepository, FunkosNotifications notification) {
@@ -47,29 +45,35 @@ public class FunkosServiceImpl implements FunkosService {
 
     @Override
     public Flux<Funko> findByNombre(String nombre) {
-        return funkoRepository.findByNombre(nombre).flatMap(funko -> cache.put(funko.getId2(), funko).then(Mono.just(funko))).switchIfEmpty(Mono.error(new FunkoNotFoundException("No se ha encontrado ningún funko con el nombre: " + nombre)));
+        return funkoRepository.findByNombre(nombre)
+                .flatMap(funko -> cache.put(funko.getId2(), funko).then(Mono.just(funko)))
+                .switchIfEmpty(Mono.error(new FunkoNotFoundException("No se ha encontrado ningún funko con el nombre: " + nombre)));
     }
 
     @Override
     public Mono<Funko> findById(long id) {
-        return cache.get(id).switchIfEmpty(funkoRepository.findById(id).flatMap(funko1 -> cache.put(funko1.getId2(), funko1).then(Mono.just(funko1))).switchIfEmpty(Mono.error(new FunkoNotFoundException("Funko con ID: " + id + " no encontrado"))));
+        return cache.get(id)
+                .switchIfEmpty(funkoRepository.findById(id)
+                        .flatMap(funko1 -> cache.put(funko1.getId2(), funko1).then(Mono.just(funko1)))
+                        .switchIfEmpty(Mono.error(new FunkoNotFoundException("Funko con ID: " + id + NOT_FOUND))));
     }
 
     public Mono<Funko> saveWithNoNotifications(Funko funko) {
-        logger.debug(("Guardando funko sin notificacion : " + funko));
-        return funkoRepository.save(funko).doOnSuccess(funko1 -> cache.put(funko1.getId2(), funko1));
+        logger.info("Guardando funko sin notificación: {}", funko);
+        return funkoRepository.save(funko)
+                .doOnSuccess(funko1 -> cache.put(funko1.getId2(), funko1));
     }
 
     @Override
     public Mono<Funko> save(Funko funko) {
-        return saveWithNoNotifications(funko).doOnSuccess(saved -> notification.notify(new Notificacion<>(Tipo.NEW, saved)));
+        return saveWithNoNotifications(funko)
+                .doOnSuccess(saved -> notification.notify(new Notificacion<>(Tipo.NEW, saved)));
     }
 
     public Mono<Funko> updateWithNoNotifications(Funko funko) {
-        logger.debug("Actualizando funko sin notificacion: " + funko);
-
+        logger.info("Actualizando funko sin notificación: {}", funko);
         return funkoRepository.findById(funko.getId2())
-                .switchIfEmpty(Mono.error(new FunkoNotFoundException("Funko con id " + funko.getId2() + " no encontrado")))
+                .switchIfEmpty(Mono.error(new FunkoNotFoundException("Funko con id " + funko.getId2() + NOT_FOUND)))
                 .flatMap(existing -> funkoRepository.update(funko)
                         .flatMap(updated -> cache.put(updated.getId2(), updated)
                                 .thenReturn(updated)));
@@ -77,24 +81,26 @@ public class FunkosServiceImpl implements FunkosService {
 
     @Override
     public Mono<Funko> update(Funko funko) {
-        logger.debug("Actualizando funko con id: " + funko.getId2());
-        return updateWithNoNotifications(funko).doOnSuccess(updated -> notification.notify(new Notificacion<>(Tipo.UPDATED, updated)));
+        logger.info("Actualizando funko con id: {}", funko.getId2());
+        return updateWithNoNotifications(funko)
+                .doOnSuccess(updated -> notification.notify(new Notificacion<>(Tipo.UPDATED, updated)));
     }
-
     public Mono<Funko> deleteByIdWithoutNotification(long id) {
-        logger.debug("Borrando funko sin notificación con id: " + id);
-        return funkoRepository.findById(id).switchIfEmpty(Mono.error(new FunkoNotFoundException("Funko con id " + id + " no encontrado"))).flatMap(funko -> funkoRepository.deleteById(id).then(Mono.just(funko)));
+        logger.info("Borrando funko sin notificación con id: {}", id);
+        return funkoRepository.findById(id).switchIfEmpty(Mono.error(new FunkoNotFoundException("Funko con id " + id + NOT_FOUND))).flatMap(funko -> funkoRepository.deleteById(id).then(Mono.just(funko)));
     }
 
     @Override
     public Mono<Boolean> deleteById(long id) {
-        logger.debug("Eliminando: " + id);
-        return deleteByIdWithoutNotification(id).doOnSuccess(deleted -> notification.notify(new Notificacion<>(Tipo.DELETED, deleted))).map(funko -> true);
+        logger.info("Eliminando: {}", id);
+        return deleteByIdWithoutNotification(id).doOnSuccess(deleted -> notification.
+                notify(new Notificacion<>(Tipo.DELETED, deleted)))
+                .map(funko -> true);
     }
 
     @Override
     public Mono<Void> deleteAll() {
-        logger.debug("Eliminando todos los funkos");
+        logger.info("Eliminando todos los funkos");
         cache.clear();
         return funkoRepository.deleteAll().then(Mono.empty());
     }

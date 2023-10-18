@@ -24,11 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static routes.Routes.*;
+
 public class FunkoStorageImpl implements FunkoStorage {
     private static FunkoStorageImpl instance;
     private final IdGenerator idGenerator;
     private final Routes routes;
-    private final Logger logger = LoggerFactory.getLogger(FunkoRepositoryImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(FunkoStorageImpl.class);
     private final List<Funko> funkos = new ArrayList<>();
 
     private FunkoStorageImpl() {
@@ -36,9 +38,9 @@ public class FunkoStorageImpl implements FunkoStorage {
         routes = Routes.getInstance();
     }
 
-    public static synchronized FunkoStorageImpl getInstance() {
+    public static FunkoStorageImpl getInstance() {
         if (instance == null) {
-            instance = new FunkoStorageImpl();
+             instance = new FunkoStorageImpl();
         }
         return instance;
     }
@@ -46,7 +48,7 @@ public class FunkoStorageImpl implements FunkoStorage {
     @Override
     public Flux<Funko> loadCsv() {
         return Flux.using(
-                () -> new BufferedReader(new FileReader(routes.getRouteFunkosCsv())),
+                () -> new BufferedReader(new FileReader(ROUTE_FUNKOS_CSV)),
                 br -> Flux.fromStream(br.lines().skip(1).map(line -> {
                     String[] split = line.split(",");
 
@@ -77,7 +79,7 @@ public class FunkoStorageImpl implements FunkoStorage {
 
     @Override
     public Mono<Void> exportJson(String ruta) {
-        logger.debug("Exportando funkos a JSON, ruta: " + ruta);
+        logger.info("Exportando funkos a JSON, ruta: {} ", ruta);
 
         return Mono.fromRunnable((() -> {
             GsonBuilder gsonBuilder = new GsonBuilder();

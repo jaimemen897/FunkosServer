@@ -8,7 +8,7 @@ import java.io.File;
 public class Routes {
     private static final String LOG_RESOURCES = "resources";
 
-    public static Routes instance;
+    private static Routes instance;
     public static final String ROUTE_FUNKOS_CSV = "src" + File.separator + "data" + File.separator + "funkos.csv";
     public static final String ROUTE_FUNKOS_JSON = "src" + File.separator + "data" + File.separator + "funkos.json";
     public static final String ROUTE_DIR_RESOURCES = "src" + File.separator + "main" + File.separator + LOG_RESOURCES + File.separator;
