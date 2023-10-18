@@ -2,7 +2,7 @@ package services.funkos;
 
 import enums.Modelo;
 import enums.Tipo;
-import exceptions.Funko.FunkoNotFoundException;
+import exceptions.funko.FunkoNotFoundException;
 import models.Funko;
 import models.Notificacion;
 import org.slf4j.Logger;

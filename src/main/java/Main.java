@@ -1,6 +1,6 @@
 import controllers.FunkoController;
-import exceptions.File.ErrorInFile;
-import exceptions.File.NotFoundFile;
+import exceptions.file.ErrorInFile;
+import exceptions.file.NotFoundFile;
 import repositories.funkos.FunkoRepositoryImpl;
 import routes.Routes;
 import services.database.DataBaseManager;

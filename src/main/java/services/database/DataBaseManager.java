@@ -15,6 +15,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static io.r2dbc.spi.ConnectionFactoryOptions.*;
+import static routes.Routes.*;
 
 @Getter
 public class DataBaseManager {
@@ -81,9 +82,9 @@ public class DataBaseManager {
 
     public synchronized void startTables() {
         logger.debug("Borrando tablas");
-        executeScripts(routes.getRemoveSqlFile()).block();
+        executeScripts(REMOVE_SQL_FILE).block();
         logger.debug("Creando tablas");
-        executeScripts(routes.getCreateSqlFile()).block();
+        executeScripts(CREATE_SQL_FILE).block();
         logger.debug("Tablas creadas");
     }
 

@@ -1,4 +1,4 @@
-package exceptions.Funko;
+package exceptions.funko;
 
 public class FunkoNotFoundException extends FunkoException {
     public FunkoNotFoundException(String message) {

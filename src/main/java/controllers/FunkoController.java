@@ -18,22 +18,22 @@ import java.util.Map;
 
 @Getter
 public class FunkoController {
-    private static FunkoController instance;
+    private static final FunkoController instance = new FunkoController();
     private final IdGenerator idGenerator;
     private final Routes routes;
-    private final FunkoRepositoryImpl funkoRepository = FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance());
-    private final FunkosNotifications notification = FunkosNotificationsImpl.getInstance();
-    private final FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(funkoRepository, notification);
+    private final FunkoRepositoryImpl funkoRepository;
+    private final FunkosNotifications notification;
+    private final FunkosServiceImpl funkosService;
 
     private FunkoController() {
         idGenerator = IdGenerator.getInstance();
         routes = Routes.getInstance();
+        funkoRepository = FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance());
+        notification = FunkosNotificationsImpl.getInstance();
+        funkosService = FunkosServiceImpl.getInstance(funkoRepository, notification);
     }
 
     public static synchronized FunkoController getInstance() {
-        if (instance == null) {
-            instance = new FunkoController();
-        }
         return instance;
     }
 

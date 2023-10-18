@@ -3,25 +3,18 @@ package repositories.crud;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface CrudRepository<T, ID> {
-    // Guardar
+public interface CrudRepository<T, K> {
     Mono<T> save(T t);
 
-    // Actualizar
     Mono<T> update(T t);
 
-    // Buscar por ID
-    Mono<T> findById(ID id);
+    Mono<T> findById(K id);
 
-    // Buscar por nombre
     Flux<T> findByNombre(String nombre);
 
-    // Buscar todos
     Flux<T> findAll();
 
-    // Borrar por ID
-    Mono<Boolean> deleteById(ID id);
+    Mono<Boolean> deleteById(K id);
 
-    // Borrar todos
     Mono<Void> deleteAll();
 }

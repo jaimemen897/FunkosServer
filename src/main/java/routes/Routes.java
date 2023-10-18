@@ -6,12 +6,17 @@ import java.io.File;
 
 @Getter
 public class Routes {
-    private static Routes instance;
-    private final String routeFunkosCsv = "src" + File.separator + "data" + File.separator + "funkos.csv";
-    private final String routeFunkosJson = "src" + File.separator + "data" + File.separator + "funkos.json";
-    private final String routeDirResources = "src" + File.separator + "main" + File.separator + "resources" + File.separator;
-    private final String removeSqlFile = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "delete.sql";
-    private final String createSqlFile = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "init.sql";
+    private static final String LOG_RESOURCES = "resources";
+
+    public static Routes instance;
+    public static final String ROUTE_FUNKOS_CSV = "src" + File.separator + "data" + File.separator + "funkos.csv";
+    public static final String ROUTE_FUNKOS_JSON = "src" + File.separator + "data" + File.separator + "funkos.json";
+    public static final String ROUTE_DIR_RESOURCES = "src" + File.separator + "main" + File.separator + LOG_RESOURCES + File.separator;
+    public static final String REMOVE_SQL_FILE = "src" + File.separator + "main" + File.separator + LOG_RESOURCES + File.separator + "delete.sql";
+    public static final String CREATE_SQL_FILE = "src" + File.separator + "main" + File.separator + LOG_RESOURCES + File.separator + "init.sql";
+
+    private Routes() {
+    }
 
     public static synchronized Routes getInstance() {
         if (instance == null) {
