@@ -14,6 +14,9 @@ public class Client{
     private final Logger logger = LoggerFactory.getLogger(Client.class);
     private static Client instance;
 
+    private static final String HOST = "localhost";
+    private static final int PORT = 3000;
+
     public synchronized static Client getInstance() {
         if (instance == null) {
             instance = new Client();
@@ -30,7 +33,7 @@ public class Client{
             System.setProperty("javax.net.ssl.trustStorePassword", keyPassword);
 
             SSLSocketFactory clientFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            SSLSocket socket = (SSLSocket) clientFactory.createSocket("localhost", 5000);
+            SSLSocket socket = (SSLSocket) clientFactory.createSocket(HOST, PORT);
 
             var outStream = socket.getOutputStream();
             var inStream = socket.getInputStream();
@@ -41,7 +44,7 @@ public class Client{
             out.println("Hola");
             String response = in.readLine();
 
-            Thread.sleep(15000);
+            Thread.sleep(1500);
 
             out.println(response);
 

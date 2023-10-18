@@ -38,7 +38,7 @@ public class FunkoController {
     }
 
     public void loadCsv() {
-        funkosService.importFromCsv();
+        funkosService.importFromCsvNoNotify();
     }
 
     public void exportJson(String ruta) {
