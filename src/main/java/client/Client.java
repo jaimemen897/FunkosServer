@@ -9,15 +9,19 @@ import com.google.gson.reflect.TypeToken;
 import common.Login;
 import common.Request;
 import common.Response;
+import enums.Modelo;
 import exceptions.Client.ClientException;
-import lombok.extern.java.Log;
+import models.Funko;
+import models.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import services.PropertiesReader;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -26,7 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static common.Request.Type.LOGIN;
+import static common.Request.Type.*;
+
 
 public class Client {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
@@ -126,7 +131,7 @@ public class Client {
         }
     }
 
-    private String sendRequestLogin() throws ClientException{
+    private String sendRequestLogin() throws ClientException {
         String myToken = null;
         var loginJson = gson.toJson(new Login("eva", "eva1234"));
         Request request = new Request(LOGIN, loginJson, null, LocalDateTime.now().toString());
@@ -155,6 +160,87 @@ public class Client {
             logger.error("Error: " + e.getMessage());
         }
         return myToken;
+    }
+
+
+    private void sendRequestFindAll() {
+        Request request = new Request(FINDALL, null, token, LocalDateTime.now().toString());
+        System.out.println("Petición enviada de tipo: " + FINDALL);
+        logger.debug("Petición enviada: " + request);
+        out.println(gson.toJson(request));
+        try {
+            Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+            }.getType());
+            logger.debug("Respuesta recibida: " + response.toString());
+
+            System.out.println("Respuesta recibida de tipo: " + response.status());
+
+            switch (response.status()) {
+                case OK -> {
+                    Flux<Funko> allFunkos = gson.fromJson((String) response.content(), new TypeToken<Flux<Funko>>() {
+                    }.getType());
+                    System.out.println("🟢 Lista de funkos: " + allFunkos.collectList().block());
+                }
+                default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+
+            }
+        } catch (IOException | ClientException e) {
+            logger.error("Error: " + e.getMessage());
+        }
+    }
+
+    private void sendRequestFindByCode(UUID cod) {
+        Request request = new Request(FINDBYCODE, cod, token, LocalDateTime.now().toString());
+        System.out.println("Petición enviada de tipo: " + FINDBYCODE);
+        logger.debug("Petición enviada: " + request);
+        out.println(gson.toJson(request));
+        try {
+            Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+            }.getType());
+
+            logger.debug("Respuesta recibida: " + response.toString());
+
+            System.out.println("Respuesta recibida de tipo: " + response.status());
+
+            switch (response.status()) {
+                case OK -> {
+                    Funko funkoByCode = gson.fromJson((String) response.content(), new TypeToken<Funko>() {
+                    }.getType());
+                    System.out.println("🟢 Funko encontrado: " + funkoByCode);
+                }
+                default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+
+            }
+        } catch (IOException | ClientException e) {
+            logger.error("Error: " + e.getMessage());
+        }
+    }
+
+    private void sendRequestFindByModelo(Modelo modelo) {
+        Request request = new Request(FINDBYMODELO, modelo, token, LocalDateTime.now().toString());
+        System.out.println("Petición enviada de tipo: " + FINDBYMODELO);
+        logger.debug("Petición enviada: " + request);
+        out.println(gson.toJson(request));
+        try {
+            Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+            }.getType());
+
+            logger.debug("Respuesta recibida: " + response.toString());
+
+            System.out.println("Respuesta recibida de tipo: " + response.status());
+
+            switch (response.status()) {
+                case OK -> {
+                    Flux<Funko> funkosByModelo = gson.fromJson((String) response.content(), new TypeToken<Flux<Funko>>() {
+                    }.getType());
+                    System.out.println("🟢 Lista de funkos: " + funkosByModelo.collectList().block());
+                }
+                default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+
+            }
+        } catch (IOException | ClientException e) {
+            logger.error("Error: " + e.getMessage());
+        }
     }
 
 
