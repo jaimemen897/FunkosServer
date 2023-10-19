@@ -12,7 +12,6 @@ import common.Response;
 import enums.Modelo;
 import exceptions.Client.ClientException;
 import models.Funko;
-import models.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -21,7 +20,6 @@ import services.PropertiesReader;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -138,7 +136,7 @@ public class Client {
         }
     }
 
-    private String sendRequestLogin() throws ClientException{
+    private String sendRequestLogin() throws ClientException {
         String myToken = null;
         var loginJson = gson.toJson(new Login("user", "user"));
         Request request = new Request(LOGIN, loginJson, myToken, LocalDateTime.now().toString());
@@ -263,6 +261,6 @@ public class Client {
             logger.error("Error: " + e.getMessage());
         }
     }
-    
-    
+
+
 }
