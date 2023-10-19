@@ -14,7 +14,6 @@ import java.util.UUID;
 @Builder
 @JsonAdapter(LocalDateAdapter.class)
 public class Funko {
-
     private final UUID cod;
     private final Long id2;
     private final LocalDate fechaLanzamiento;

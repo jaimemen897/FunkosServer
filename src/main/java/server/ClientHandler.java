@@ -73,7 +73,7 @@ public class ClientHandler extends Thread {
             openConnection();
 
             String clientInput;
-            Request<?> request;
+            Request request;
 
             while (true) {
                 clientInput = in.readLine();
@@ -82,7 +82,7 @@ public class ClientHandler extends Thread {
                 handleRequest(request);
 
             }
-        } catch (IOException e) {
+        } catch (IOException | ServerException e) {
             System.out.println("Error al leer el mensaje del cliente: " + e.getMessage());
         }
     }
@@ -231,13 +231,14 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processDelete(Request<Long> request) {
+    private void processDelete(Request request) {
         logger.debug("Petición de borrar un registro recibida: " + request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
             var id = request.content();
-            funkosService.deleteByIdWithoutNotification(id).subscribe(funkoDelete -> {
+            System.out.println(id);
+            funkosService.deleteByIdWithoutNotification((Long) id).subscribe(funkoDelete -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
                 out.println(gson.toJson(new Response<>(Response.Status.OK, funkoDelete, LocalDateTime.now().toString())));
             }, error -> {

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static common.Request.Type.DELETE;
 import static common.Request.Type.LOGIN;
 
 public class Client {
@@ -53,10 +54,17 @@ public class Client {
     public void start() throws IOException {
         try {
             openConnection();
+            token = sendRequestLogin();
+
+            sendRequestDelete(token, "1");
 
         } catch (IOException e) {
             logger.error("Error al abrir la conexión: " + e.getLocalizedMessage());
-            throw e;
+            System.out.println("🔴 Error al abrir la conexión");
+            closeConnection();
+            System.exit(1);
+        } catch (ClientException e) {
+            logger.error("Error al enviar la petición: " + e.getLocalizedMessage());
         }
     }
 
@@ -100,7 +108,7 @@ public class Client {
         System.setProperty("javax.net.ssl.trustStorePassword", myConfig.get("keyPassword"));
 
         SSLSocketFactory clientFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        SSLSocket socket = (SSLSocket) clientFactory.createSocket(HOST, PORT);
+        socket = (SSLSocket) clientFactory.createSocket(HOST, PORT);
 
         socket.setEnabledCipherSuites(new String[]{"TLS_AES_128_GCM_SHA256"});
         socket.setEnabledProtocols(new String[]{"TLSv1.3"});
@@ -128,28 +136,23 @@ public class Client {
 
     private String sendRequestLogin() throws ClientException{
         String myToken = null;
-        var loginJson = gson.toJson(new Login("eva", "eva1234"));
-        Request request = new Request(LOGIN, loginJson, null, LocalDateTime.now().toString());
+        var loginJson = gson.toJson(new Login("user", "user"));
+        Request request = new Request(LOGIN, loginJson, myToken, LocalDateTime.now().toString());
         System.out.println("Petición enviada de tipo: " + LOGIN);
         logger.debug("Petición enviada: " + request);
         out.println(gson.toJson(request));
 
         try {
-
             Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
             }.getType());
-
             logger.debug("Respuesta recibida: " + response.toString());
-
             System.out.println("Respuesta recibida de tipo: " + response.status());
-
             switch (response.status()) {
                 case TOKEN -> {
                     System.out.println("🟢 Mi token es: " + response.content());
                     myToken = (String) response.content();
                 }
-                default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
-
+                default -> throw new ClientException("LOGIN - Tipo de respuesta no esperado: " + response.content());
             }
         } catch (IOException e) {
             logger.error("Error: " + e.getMessage());
@@ -157,41 +160,23 @@ public class Client {
         return myToken;
     }
 
+    private void sendRequestDelete(String token, String id) throws ClientException, IOException {
+        Request request = new Request(DELETE, id, token, LocalDateTime.now().toString());
+        System.out.println("Petición enviada de tipo: " + DELETE);
+        logger.debug("Petición enviada: " + request);
 
-    /*public static void main(String[] args) {
-        try {
-            String keyFile = "./cert/client_keystore.p12";
-            String keyPassword = "1234567";
+        out.println(gson.toJson(request));
 
-            System.setProperty("javax.net.ssl.trustStore", keyFile);
-            System.setProperty("javax.net.ssl.trustStorePassword", keyPassword);
+        Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        }.getType());
+        logger.debug("Respuesta recibida: " + response.toString());
 
-            SSLSocketFactory clientFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            SSLSocket socket = (SSLSocket) clientFactory.createSocket(HOST, PORT);
+        System.out.println("Respuesta recibida de tipo: " + response.status());
 
-            var outStream = socket.getOutputStream();
-            var inStream = socket.getInputStream();
-
-            PrintWriter out = new PrintWriter(outStream, true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(inStream));
-
-            out.println("Hola");
-            String response = in.readLine();
-
-            Thread.sleep(1500);
-
-            out.println(response);
-
-            System.out.println("Respuesta servidor " + response);
-
-            System.out.println(in.readLine());
-            Thread.sleep(1000);
-
-            in.close();
-            out.close();
-            socket.close();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+        switch (response.status()) {
+            case OK -> System.out.println("🟢 Funko eliminado correctamente");
+            case ERROR -> System.out.println("🔴 Error al eliminar el funko");
+            default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
         }
-    }*/
+    }
 }

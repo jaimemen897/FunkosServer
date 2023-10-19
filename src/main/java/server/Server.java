@@ -21,9 +21,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Server {
 
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
-    //Mover TOKEN_SECRET a un fichero de configuración
-    public static final String TOKEN_SECRET = "MeGustanLosPepinosDeLeganesSiSonGrandesYHermosos";
-    public static final long TOKEN_EXPIRATION = 10000;
+
+    public static String TOKEN_SECRET;
+    public static long TOKEN_EXPIRATION;
     public static final int PUERTO = 3000;
     private static final AtomicLong clientNumber = new AtomicLong(0);
     private static final FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
@@ -35,8 +35,8 @@ public class Server {
 
             String keyFile = properties.getProperty("keyFile");
             String keyPassword = properties.getProperty("keyPassword");
-            String tokenSecret = properties.getProperty("tokenSecret");
-            String tokenExpiration = properties.getProperty("tokenExpiration");
+            TOKEN_SECRET = properties.getProperty("tokenSecret");
+            TOKEN_EXPIRATION = Long.parseLong(properties.getProperty("tokenExpiration"));
 
             // Comprobamos que no estén vacías
             if (keyFile.isEmpty() || keyPassword.isEmpty()) {
@@ -51,8 +51,8 @@ public class Server {
             Map<String, String> configMap = new HashMap<>();
             configMap.put("keyFile", keyFile);
             configMap.put("keyPassword", keyPassword);
-            configMap.put("tokenSecret", tokenSecret);
-            configMap.put("tokenExpiration", tokenExpiration);
+            configMap.put("tokenSecret", TOKEN_SECRET);
+            configMap.put("tokenExpiration", String.valueOf(TOKEN_EXPIRATION));
 
             return configMap;
         } catch (FileNotFoundException e) {
