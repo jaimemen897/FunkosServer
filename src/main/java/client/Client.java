@@ -62,7 +62,7 @@ public class Client {
             token = sendRequestLogin();
 
             sendRequestFindAll();
-            sendRequestFindByCode(UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"));
+
             sendRequestDelete(token, "1");
 
             sendRequestSalir();
@@ -174,32 +174,10 @@ public class Client {
 
         switch (response.status()) {
             case OK -> {
-
-                List<Funko> responseContent = gson.fromJson(response.content().toString(), new TypeToken<List<Funko>>() {
-                }.getType());
-                System.out.println("🟢 Los alumnos son: " + responseContent);
+                System.out.println("🟢 Los alumnos son: " + response.content());
             }
-            case ERROR -> System.err.println("🔴 Error: " + response.content()); // No se ha encontrado
+            case ERROR -> System.err.println("🔴 Error: " + response.content());
         }
-        /*try {
-            Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
-            }.getType());
-            logger.debug("Respuesta recibida: " + response.toString());
-
-            System.out.println("Respuesta recibida de tipo: " + response.status());
-
-            switch (response.status()) {
-                case OK -> {
-                    Flux<Funko> allFunkos = gson.fromJson((String) response.content(), new TypeToken<Flux<Funko>>() {
-                    }.getType());
-                    System.out.println("🟢 Lista de funkos: " + allFunkos.collectList().block());
-                }
-                default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
-
-            }
-        } catch (IOException | ClientException e) {
-            logger.error("Error: " + e.getMessage());
-        }*/
     }
 
     private void sendRequestFindByCode(UUID cod) {
