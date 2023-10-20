@@ -2,6 +2,7 @@ package server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import repositories.funkos.FunkoRepositoryImpl;
 import services.PropertiesReader;
 import services.database.DataBaseManager;
@@ -26,7 +27,7 @@ public class Server {
     public static long TOKEN_EXPIRATION;
     public static final int PUERTO = 3000;
     private static final AtomicLong clientNumber = new AtomicLong(0);
-    private static final FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
+
 
     public static Map<String, String> readEnv() {
         try {
@@ -38,12 +39,10 @@ public class Server {
             TOKEN_SECRET = properties.getProperty("tokenSecret");
             TOKEN_EXPIRATION = Long.parseLong(properties.getProperty("tokenExpiration"));
 
-            // Comprobamos que no estén vacías
             if (keyFile.isEmpty() || keyPassword.isEmpty()) {
                 throw new IllegalStateException("Hay errores al procesar el fichero de propiedades o una de ellas está vacía");
             }
 
-            // Comprobamos el fichero de la clave
             if (!Files.exists(Path.of(keyFile))) {
                 throw new FileNotFoundException("No se encuentra el fichero de la clave");
             }
@@ -78,14 +77,13 @@ public class Server {
 
             serverSocket.setEnabledCipherSuites(new String[]{"TLS_AES_128_GCM_SHA256"});
             serverSocket.setEnabledProtocols(new String[]{"TLSv1.3"});
-            System.out.println("Servidor iniciado en el puerto 3000");
-            funkosService.importFromCsvNoNotify();
+            System.out.println("🟢 Servidor iniciado en el puerto " + PUERTO);
 
             while (true) {
                 new ClientHandler(serverSocket.accept(), clientNumber.getAndIncrement()).start();
             }
         } catch (Exception e) {
-            System.out.println("Error al iniciar el servidor: " + e.getMessage());
+            System.out.println("🔴 Error al iniciar el servidor: " + e.getMessage());
         }
     }
 }

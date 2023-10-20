@@ -64,6 +64,20 @@ public class TokenService {
         }
     }
 
+    public boolean verifyAdmin(String token, String tokenSecret) {
+        logger.debug("Verificando token");
+        Algorithm algorithm = Algorithm.HMAC256(tokenSecret);
+        try {
+            JWTVerifier verifier = JWT.require(algorithm).build();
+            DecodedJWT decodedJWT = verifier.verify(token);
+            logger.debug("Token verificado");
+            return decodedJWT.getClaim("rol").asString().equals(User.Role.ADMIN.toString());
+        } catch (Exception e) {
+            logger.error("Error al verificar el token: " + e.getMessage());
+            return false;
+        }
+    }
+
     public boolean verifyToken(String token, String tokenSecret) {
         logger.debug("Verificando token");
         Algorithm algorithm = Algorithm.HMAC256(tokenSecret);

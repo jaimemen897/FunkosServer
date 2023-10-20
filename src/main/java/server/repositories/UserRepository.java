@@ -9,7 +9,6 @@ import java.util.Optional;
 public class UserRepository {
     private static UserRepository instance = null;
     private final List<User> users = List.of(
-            //TODO: Cifrar las contraseñas con BCrypt
             new User(1, "admin", BCrypt.hashpw("admin", BCrypt.gensalt(12)), User.Role.ADMIN),
             new User(2, "user", BCrypt.hashpw("user", BCrypt.gensalt(12)), User.Role.USER)
     );

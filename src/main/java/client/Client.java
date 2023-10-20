@@ -14,6 +14,7 @@ import exceptions.Client.ClientException;
 import models.Funko;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import reactor.core.publisher.Flux;
 import services.PropertiesReader;
 
@@ -25,6 +26,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,6 +48,7 @@ public class Client {
 
     public static void main(String[] args) {
         Client client = new Client();
+
         try {
             client.start();
         } catch (IOException e) {
@@ -58,7 +61,11 @@ public class Client {
             openConnection();
             token = sendRequestLogin();
 
+            sendRequestFindAll();
+            sendRequestFindByCode(UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"));
             sendRequestDelete(token, "1");
+
+            sendRequestSalir();
 
         } catch (IOException e) {
             logger.error("Error al abrir la conexión: " + e.getLocalizedMessage());
@@ -67,37 +74,6 @@ public class Client {
             System.exit(1);
         } catch (ClientException e) {
             logger.error("Error al enviar la petición: " + e.getLocalizedMessage());
-        }
-    }
-
-    public Map<String, String> readConfigFile() {
-        try {
-            logger.debug("Leyendo el fichero de configuracion");
-            PropertiesReader properties = new PropertiesReader("client.properties");
-
-            String keyFile = properties.getProperty("keyFile");
-            String keyPassword = properties.getProperty("keyPassword");
-
-            if (keyFile.isEmpty() || keyPassword.isEmpty()) {
-                throw new IllegalStateException("Hay errores al procesar el fichero de propiedades o una de ellas está vacía");
-            }
-
-            if (!Files.exists(Path.of(keyFile))) {
-                throw new FileNotFoundException("No se encuentra el fichero de la clave");
-            }
-
-            Map<String, String> configMap = new HashMap<>();
-            configMap.put("keyFile", keyFile);
-            configMap.put("keyPassword", keyPassword);
-
-            return configMap;
-        } catch (FileNotFoundException e) {
-            logger.error("Error en clave: " + e.getLocalizedMessage());
-            System.exit(1);
-            return null;
-        } catch (IOException e) {
-            logger.error("Error al leer el fichero de configuracion: " + e.getLocalizedMessage());
-            return null;
         }
     }
 
@@ -138,8 +114,10 @@ public class Client {
 
     private String sendRequestLogin() throws ClientException {
         String myToken = null;
-        var loginJson = gson.toJson(new Login("user", "user"));
+        var loginJson = gson.toJson(new Login("admin", "admin"));
+
         Request request = new Request(LOGIN, loginJson, myToken, LocalDateTime.now().toString());
+
         System.out.println("Petición enviada de tipo: " + LOGIN);
         logger.debug("Petición enviada: " + request);
         out.println(gson.toJson(request));
@@ -149,6 +127,7 @@ public class Client {
             }.getType());
             logger.debug("Respuesta recibida: " + response.toString());
             System.out.println("Respuesta recibida de tipo: " + response.status());
+
             switch (response.status()) {
                 case TOKEN -> {
                     System.out.println("🟢 Mi token es: " + response.content());
@@ -182,12 +161,27 @@ public class Client {
         }
     }
 
-    private void sendRequestFindAll() {
-        Request request = new Request(FINDALL, null, token, LocalDateTime.now().toString());
+    private void sendRequestFindAll() throws IOException, ClientException {
+        Request request = new Request<>(FINDALL, null, token, LocalDateTime.now().toString());
         System.out.println("Petición enviada de tipo: " + FINDALL);
         logger.debug("Petición enviada: " + request);
         out.println(gson.toJson(request));
-        try {
+
+        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        }.getType());
+        logger.debug("Respuesta recibida: " + response.toString());
+        System.out.println("Respuesta recibida de tipo: " + response.status());
+
+        switch (response.status()) {
+            case OK -> {
+
+                List<Funko> responseContent = gson.fromJson(response.content().toString(), new TypeToken<List<Funko>>() {
+                }.getType());
+                System.out.println("🟢 Los alumnos son: " + responseContent);
+            }
+            case ERROR -> System.err.println("🔴 Error: " + response.content()); // No se ha encontrado
+        }
+        /*try {
             Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
             }.getType());
             logger.debug("Respuesta recibida: " + response.toString());
@@ -205,7 +199,7 @@ public class Client {
             }
         } catch (IOException | ClientException e) {
             logger.error("Error: " + e.getMessage());
-        }
+        }*/
     }
 
     private void sendRequestFindByCode(UUID cod) {
@@ -259,6 +253,59 @@ public class Client {
             }
         } catch (IOException | ClientException e) {
             logger.error("Error: " + e.getMessage());
+        }
+    }
+
+    private void sendRequestSalir() throws IOException, ClientException {
+        Request request = new Request(EXIT, null, token, LocalDateTime.now().toString());
+        System.out.println("Petición enviada de tipo: " + EXIT);
+        logger.debug("Petición enviada: " + request);
+
+        out.println(gson.toJson(request));
+
+        Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        }.getType());
+        logger.debug("Respuesta recibida: " + response.toString());
+
+        System.out.println("Respuesta recibida de tipo: " + response.status());
+
+        switch (response.status()) {
+            case EXIT -> {
+                System.out.println("🟢 Saliendo del programa");
+                closeConnection();
+            }
+            default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+        }
+    }
+
+    public Map<String, String> readConfigFile() {
+        try {
+            logger.debug("Leyendo el fichero de configuracion");
+            PropertiesReader properties = new PropertiesReader("client.properties");
+
+            String keyFile = properties.getProperty("keyFile");
+            String keyPassword = properties.getProperty("keyPassword");
+
+            if (keyFile.isEmpty() || keyPassword.isEmpty()) {
+                throw new IllegalStateException("Hay errores al procesar el fichero de propiedades o una de ellas está vacía");
+            }
+
+            if (!Files.exists(Path.of(keyFile))) {
+                throw new FileNotFoundException("No se encuentra el fichero de la clave");
+            }
+
+            Map<String, String> configMap = new HashMap<>();
+            configMap.put("keyFile", keyFile);
+            configMap.put("keyPassword", keyPassword);
+
+            return configMap;
+        } catch (FileNotFoundException e) {
+            logger.error("Error en clave: " + e.getLocalizedMessage());
+            System.exit(1);
+            return null;
+        } catch (IOException e) {
+            logger.error("Error al leer el fichero de configuracion: " + e.getLocalizedMessage());
+            return null;
         }
     }
 
