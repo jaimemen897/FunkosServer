@@ -172,7 +172,8 @@ public class ClientHandler extends Thread {
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
-            var modelo = request.content();
+            Modelo modelo = Modelo.valueOf(String.valueOf(request.content()));
+            System.out.println(modelo);
             funkosService.findByModelo(modelo).collectList().subscribe(funkos -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
                 out.println(gson.toJson(new Response<>(Response.Status.OK, funkos, LocalDateTime.now().toString())));
@@ -191,7 +192,7 @@ public class ClientHandler extends Thread {
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
-            var fecha = request.content();
+            LocalDate fecha = LocalDate.parse(String.valueOf(request.content()));
             funkosService.findByReleaseDate(fecha).collectList().subscribe(funkos -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
                 out.println(gson.toJson(new Response<>(Response.Status.OK, funkos, LocalDateTime.now().toString())));

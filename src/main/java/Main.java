@@ -7,6 +7,7 @@ import services.database.DataBaseManager;
 import services.funkos.FunkosNotificationsImpl;
 import services.funkos.FunkosServiceImpl;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 public class Main {
@@ -76,6 +77,12 @@ public class Main {
 
         funkosService.findByCodigo("f8f7ae42-5b01-4d3b-82ab-02d1a2d6e443").subscribe(
                 funkos -> System.out.println("Todos los funkos: " + funkos),
+                error -> System.err.println("Error al obtener todos los funkos: " + error.getMessage()),
+                () -> System.out.println("Obtención de funkos completada")
+        );
+
+        funkosService.findByReleaseDate(LocalDate.parse("2022-05-01")).subscribe(
+                funkos -> System.out.println("Todos los funkos by release date: " + funkos),
                 error -> System.err.println("Error al obtener todos los funkos: " + error.getMessage()),
                 () -> System.out.println("Obtención de funkos completada")
         );

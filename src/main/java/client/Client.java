@@ -1,6 +1,6 @@
 package client;
 
-import adapters.LocalDateAdapter;
+import adapters.LocalDateAdapter2;
 import adapters.LocalDateTimeAdapter;
 import adapters.UuidAdapter;
 import com.google.gson.Gson;
@@ -14,7 +14,6 @@ import exceptions.Client.ClientException;
 import models.Funko;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
 import services.PropertiesReader;
 
 import javax.net.ssl.SSLSocket;
@@ -31,13 +30,12 @@ import java.util.UUID;
 
 import static common.Request.Type.*;
 
-
 public class Client {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private static final String HOST = "localhost";
     private static final int PORT = 3000;
     private final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter2())
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .registerTypeAdapter(UUID.class, new UuidAdapter()).create();
     private SSLSocket socket;
@@ -65,6 +63,11 @@ public class Client {
             sendRequestFindByCode(UUID.fromString("f8f7ae42-5b01-4d3b-82ab-02d1a2d6e443"));
 
             sendRequestDelete(token, "1");
+
+            sendRequestFindByModelo(Modelo.DISNEY);
+
+
+            sendRequestByRelease(LocalDate.of(2022, 5, 1));
 
             sendRequestSalir();
 
@@ -198,31 +201,42 @@ public class Client {
         }
     }
 
-    private void sendRequestFindByModelo(Modelo modelo) {
-        Request request = new Request(FINDBYMODELO, modelo, token, LocalDateTime.now().toString());
+    private void sendRequestFindByModelo(Modelo modelo) throws ClientException, IOException {
+        Request<Modelo> request = new Request<>(FINDBYMODELO, modelo, token, LocalDateTime.now().toString());
         System.out.println("Petición enviada de tipo: " + FINDBYMODELO);
         logger.debug("Petición enviada: " + request);
         out.println(gson.toJson(request));
-        try {
-            Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
-            }.getType());
 
-            logger.debug("Respuesta recibida: " + response.toString());
+        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        }.getType());
+        logger.debug("Respuesta recibida: " + response.toString());
+        System.out.println("Respuesta recibida de tipo: " + response.status());
 
-            System.out.println("Respuesta recibida de tipo: " + response.status());
-
-            switch (response.status()) {
-                case OK -> {
-                    Flux<Funko> funkosByModelo = gson.fromJson((String) response.content(), new TypeToken<Flux<Funko>>() {
-                    }.getType());
-                    System.out.println("🟢 Lista de funkos: " + funkosByModelo.collectList().block());
-                }
-                default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
-
-            }
-        } catch (IOException | ClientException e) {
-            logger.error("Error: " + e.getMessage());
+        switch (response.status()) {
+            case OK -> System.out.println("🟢 Lista de funkos por modelo: " + response.content());
+            default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
         }
+
+    }
+
+    private void sendRequestByRelease(LocalDate release) throws ClientException, IOException {
+        Request<LocalDate> request = new Request<>(FINDBYRELEASEDATE, release, token, LocalDateTime.now().toString());
+        out.println(gson.toJson(request));
+        System.out.println("Petición enviada de tipo: " + FINDBYRELEASEDATE);
+        logger.debug("Petición enviada: " + request);
+
+        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        }.getType());
+
+        logger.debug("Respuesta recibida: " + response.toString());
+
+        System.out.println("Respuesta recibida de tipo: " + response.status());
+
+        switch (response.status()) {
+            case OK -> System.out.println("🟢 Lista de funkos por fecha de lanzamiento: " + response.content());
+            default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+        }
+
     }
 
     private void sendRequestSalir() throws IOException, ClientException {
