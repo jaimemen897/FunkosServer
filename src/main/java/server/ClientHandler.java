@@ -76,7 +76,6 @@ public class ClientHandler extends Thread {
         logger.makeLoggingEventBuilder(Level.DEBUG);
         try {
             openConnection();
-            funkosService.importFromCsvNoNotify();
 
             String clientInput;
             Request request;
@@ -148,7 +147,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processFindByCode(Request<UUID> request) {
+    private void processFindByCode(Request<String> request) {
         logger.debug("Petición de obtener un funko por código recibida: " + request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
@@ -156,7 +155,8 @@ public class ClientHandler extends Thread {
             var id = request.content();
             funkosService.findByCodigo(id).subscribe(funko -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
-                out.println(gson.toJson(new Response<>(Response.Status.OK, funko, LocalDateTime.now().toString())));
+                var resJson = gson.toJson(funko);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, resJson, LocalDateTime.now().toString())));
             }, error -> {
                 logger.error("Error al buscar el funko por código: " + error.getMessage());
                 out.println(gson.toJson(new Response<>(ERROR, "Error al buscar el funko por código: " + error.getMessage(), LocalDateTime.now().toString())));

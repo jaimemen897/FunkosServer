@@ -18,7 +18,7 @@ public interface CrudRepository<T, ID> {
     Mono<T> findById(ID id);
 
     // Buscar por codigo
-    Mono<T> findByCodigo(UUID codigo);
+    Mono<T> findByCodigo(String codigo);
 
     // Buscar por nombre
     Flux<T> findByNombre(String nombre);

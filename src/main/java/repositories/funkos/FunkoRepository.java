@@ -20,7 +20,7 @@ public interface FunkoRepository extends CrudRepository<Funko, Long> {
     Mono<Funko> findById(Long id);
 
     // Buscar por codigo
-    Mono<Funko> findByCodigo(UUID codigo);
+    Mono<Funko> findByCodigo(String codigo);
 
     // Buscar por nombre
     Flux<Funko> findByNombre(String nombre);

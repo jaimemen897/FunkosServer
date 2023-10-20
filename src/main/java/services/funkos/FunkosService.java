@@ -18,7 +18,7 @@ public interface FunkosService {
 
     Mono<Funko> findById(long id) throws ExecutionException, InterruptedException, FunkoNotFoundException;
 
-    Mono<Funko> findByCodigo(UUID codigo) throws ExecutionException, InterruptedException, FunkoNotFoundException;
+    Mono<Funko> findByCodigo(String codigo) throws ExecutionException, InterruptedException, FunkoNotFoundException;
 
     Flux<Funko> findByModelo(Modelo modelo) throws ExecutionException, InterruptedException, FunkoNotFoundException;
 

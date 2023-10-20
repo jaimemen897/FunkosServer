@@ -97,8 +97,9 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     }
 
     @Override
-    public Mono<Funko> findByCodigo(UUID code){
+    public Mono<Funko> findByCodigo(String code){
         logger.debug("Buscando funko por codigo: " + code);
+        UUID uuid = UUID.fromString(code);
         String query = "SELECT * FROM FUNKOS WHERE cod = ?";
         return Mono.usingWhen(
                 connectionFactory.create(),

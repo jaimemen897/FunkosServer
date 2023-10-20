@@ -27,6 +27,7 @@ public class Server {
     public static long TOKEN_EXPIRATION;
     public static final int PUERTO = 3000;
     private static final AtomicLong clientNumber = new AtomicLong(0);
+    private static final FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
 
 
     public static Map<String, String> readEnv() {
@@ -66,6 +67,7 @@ public class Server {
 
     public static void main(String[] args) {
         try {
+            funkosService.importFromCsvNoNotify();
             var config = readEnv();
             logger.debug("Configurando el servidor");
 

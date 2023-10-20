@@ -7,6 +7,8 @@ import services.database.DataBaseManager;
 import services.funkos.FunkosNotificationsImpl;
 import services.funkos.FunkosServiceImpl;
 
+import java.util.UUID;
+
 public class Main {
     public static void main(String[] args) throws NotFoundFile, ErrorInFile {
         FunkosNotificationsImpl notifications = FunkosNotificationsImpl.getInstance();
@@ -72,7 +74,13 @@ public class Main {
                 () -> System.out.println("Obtención del número de funkos de Stitch completada")
         );
 
-        funkosService.findById(80L).subscribe(
+        funkosService.findByCodigo("f8f7ae42-5b01-4d3b-82ab-02d1a2d6e443").subscribe(
+                funkos -> System.out.println("Todos los funkos: " + funkos),
+                error -> System.err.println("Error al obtener todos los funkos: " + error.getMessage()),
+                () -> System.out.println("Obtención de funkos completada")
+        );
+
+        /*funkosService.findById(80L).subscribe(
                 funkos -> System.out.println("Funko con ID 80: " + funkos),
                 error -> System.err.println("Error al obtener todos los funkos: " + error.getMessage()),
                 () -> System.out.println("Obtención de funkos completada")
@@ -83,6 +91,12 @@ public class Main {
                 error -> System.err.println("Error al obtener todos los funkos: " + error.getMessage()),
                 () -> System.out.println("Obtención de funkos completada")
         );
+
+        funkosService.findByCodigo(UUID.fromString("3b6c6f58-79b9-434b-82ab-01a2d6e4434a")).subscribe(
+                funkos -> System.out.println("Funko con código 3b6c6f58-79b9-434b-82ab-01a2d6e4434a: " + funkos),
+                error -> System.err.println("Error al obtener todos los funkos: " + error.getMessage()),
+                () -> System.out.println("Obtención de funkos completada")
+        );*/
 
         funkoController.exportJson(routes.getRouteFunkosJson());
         System.exit(0);

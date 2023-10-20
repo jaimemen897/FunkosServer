@@ -58,7 +58,7 @@ public class FunkosServiceImpl implements FunkosService {
     }
 
     @Override
-    public Mono<Funko> findByCodigo(UUID codigo){
+    public Mono<Funko> findByCodigo(String codigo){
         return funkoRepository.findByCodigo(codigo).flatMap(funko -> cache.put(funko.getId2(), funko).then(Mono.just(funko))).switchIfEmpty(Mono.error(new FunkoNotFoundException("No se ha encontrado ningún funko con el código: " + codigo)));
     }
 

@@ -14,7 +14,6 @@ import exceptions.Client.ClientException;
 import models.Funko;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 import reactor.core.publisher.Flux;
 import services.PropertiesReader;
 
@@ -62,6 +61,8 @@ public class Client {
             token = sendRequestLogin();
 
             sendRequestFindAll();
+
+            sendRequestFindByCode(UUID.fromString("f8f7ae42-5b01-4d3b-82ab-02d1a2d6e443"));
 
             sendRequestDelete(token, "1");
 
@@ -114,7 +115,7 @@ public class Client {
 
     private String sendRequestLogin() throws ClientException {
         String myToken = null;
-        var loginJson = gson.toJson(new Login("admin", "admin"));
+        var loginJson = gson.toJson(new Login("user", "user"));
 
         Request request = new Request(LOGIN, loginJson, myToken, LocalDateTime.now().toString());
 
@@ -173,37 +174,27 @@ public class Client {
         System.out.println("Respuesta recibida de tipo: " + response.status());
 
         switch (response.status()) {
-            case OK -> {
-                System.out.println("🟢 Los alumnos son: " + response.content());
-            }
+            case OK -> System.out.println("🟢 Los funkos son: " + response.content());
             case ERROR -> System.err.println("🔴 Error: " + response.content());
         }
     }
 
-    private void sendRequestFindByCode(UUID cod) {
-        Request request = new Request(FINDBYCODE, cod, token, LocalDateTime.now().toString());
+    private void sendRequestFindByCode(UUID cod) throws IOException, ClientException {
+        Request<UUID> request = new Request<>(FINDBYCODE, cod, token, LocalDateTime.now().toString());
         System.out.println("Petición enviada de tipo: " + FINDBYCODE);
         logger.debug("Petición enviada: " + request);
         out.println(gson.toJson(request));
-        try {
-            Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
-            }.getType());
 
-            logger.debug("Respuesta recibida: " + response.toString());
+        Response<UUID> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        }.getType());
 
-            System.out.println("Respuesta recibida de tipo: " + response.status());
+        logger.debug("Respuesta recibida: " + response.toString());
 
-            switch (response.status()) {
-                case OK -> {
-                    Funko funkoByCode = gson.fromJson((String) response.content(), new TypeToken<Funko>() {
-                    }.getType());
-                    System.out.println("🟢 Funko encontrado: " + funkoByCode);
-                }
-                default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+        System.out.println("Respuesta recibida de tipo: " + response.status());
 
-            }
-        } catch (IOException | ClientException e) {
-            logger.error("Error: " + e.getMessage());
+        switch (response.status()) {
+            case OK -> System.out.println("🟢 Funko encontrado: " + response.content());
+            default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
         }
     }
 
