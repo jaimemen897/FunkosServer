@@ -31,7 +31,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import static common.Response.Status.*;
@@ -161,8 +160,8 @@ public class ClientHandler extends Thread {
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
-            var id = request.content();
-            funkosService.findByCodigo(id).subscribe(funko -> {
+            var cod = request.content();
+            funkosService.findByCodigo(cod).subscribe(funko -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
                 var resJson = gson.toJson(funko);
                 out.println(gson.toJson(new Response<>(Response.Status.OK, resJson, LocalDateTime.now().toString())));
@@ -185,7 +184,8 @@ public class ClientHandler extends Thread {
             System.out.println(modelo);
             funkosService.findByModelo(modelo).collectList().subscribe(funkos -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
-                out.println(gson.toJson(new Response<>(Response.Status.OK, funkos, LocalDateTime.now().toString())));
+                var resJson= gson.toJson(funkos);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, resJson, LocalDateTime.now().toString())));
             }, error -> {
                 logger.error("Error al buscar el funko por modelo: " + error.getMessage());
                 out.println(gson.toJson(new Response<>(ERROR, "Error al buscar el funko por modelo: " + error.getMessage(), LocalDateTime.now().toString())));
@@ -240,8 +240,8 @@ public class ClientHandler extends Thread {
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
-            var funko = request.content();
-            funkosService.updateWithNoNotifications(funko).subscribe(funkoUpdate -> {
+            var funkoJson = gson.fromJson(String.valueOf(request.content()), Funko.class);
+            funkosService.updateWithNoNotifications(funkoJson).subscribe(funkoUpdate -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
                 out.println(gson.toJson(new Response<>(Response.Status.OK, funkoUpdate, LocalDateTime.now().toString())));
             }, error -> {

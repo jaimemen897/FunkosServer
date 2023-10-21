@@ -73,6 +73,10 @@ public class Client {
 
             sendRequestInsert(funko);
 
+            Funko funko1 = Funko.builder().cod(UUID.randomUUID()).id2(90L).nombre("Simba").modelo(Modelo.DISNEY).precio(60.0).fechaLanzamiento(LocalDate.parse("2023-10-21")).build();
+
+            sendRequestUpdate(funko1);
+
             sendRequestByRelease(LocalDate.of(2022, 5, 1));
 
             sendRequestSalir();
@@ -244,6 +248,25 @@ public class Client {
 
         switch (response.status()) {
             case OK -> System.out.println("🟢 Funko insertado correctamente: " + response.content());
+            case ERROR -> System.err.println("🔴 Error: " + response.content());
+            default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+        }
+    }
+
+    private void sendRequestUpdate(Funko funko) throws ClientException, IOException {
+        var funkoJson = gson.toJson(funko);
+        Request<String> request = new Request<>(UPDATE, funkoJson, token, LocalDateTime.now().toString());
+        sendRequest(request);
+
+        Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        }.getType());
+
+        logger.debug("Respuesta recibida: " + response.toString());
+
+        System.out.println("Respuesta recibida de tipo: " + response.status());
+
+        switch (response.status()) {
+            case OK -> System.out.println("🟢 Funko actualizado correctamente: " + response.content());
             case ERROR -> System.err.println("🔴 Error: " + response.content());
             default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
         }
