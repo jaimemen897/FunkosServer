@@ -31,19 +31,19 @@ public class FunkoCacheImpl implements FunkoCache {
 
     @Override
     public Mono<Void> put(Long key, Funko value) {
-        logger.info("Guardando funko en la cache con id: {}", key);
+        logger.debug("Guardando funko en la cache con id: {}", key);
         return Mono.fromRunnable(() -> cache.put(key, value));
     }
 
     @Override
     public Mono<Funko> get(Long key) {
-        logger.info("Obteniendo funko de la cache con id: {}", key);
+        logger.debug("Obteniendo funko de la cache con id: {}", key);
         return Mono.justOrEmpty(cache.get(key));
     }
 
     @Override
     public Mono<Void> remove(Long key) {
-        logger.info("Eliminando funko de la cache con id: {}", key);
+        logger.debug("Eliminando funko de la cache con id: {}", key);
         return Mono.fromRunnable(() -> cache.remove(key));
     }
 
