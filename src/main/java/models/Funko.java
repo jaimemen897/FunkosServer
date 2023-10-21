@@ -24,4 +24,18 @@ public class Funko {
     private LocalDateTime createdAt = LocalDateTime.now();
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Override
+    public String toString() {
+        return "Funko{" +
+                "cod=" + cod +
+                ", id2=" + id2 +
+                ", fechaLanzamiento=" + fechaLanzamiento +
+                ", nombre='" + nombre + '\'' +
+                ", modelo=" + modelo +
+                ", precio=" + precio +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }

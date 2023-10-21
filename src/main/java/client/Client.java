@@ -1,5 +1,6 @@
 package client;
 
+import adapters.FunkoAdapter;
 import adapters.LocalDateAdapter2;
 import adapters.LocalDateTimeAdapter;
 import adapters.UuidAdapter;
@@ -35,6 +36,7 @@ public class Client {
     private static final String HOST = "localhost";
     private static final int PORT = 3000;
     private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Funko.class, new FunkoAdapter())
             .registerTypeAdapter(LocalDate.class, new LocalDateAdapter2())
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .registerTypeAdapter(UUID.class, new UuidAdapter()).create();
@@ -67,8 +69,9 @@ public class Client {
 
             sendRequestFindByModelo(Modelo.DISNEY);
 
-            /*var funko = Funko.builder().cod(UUID.randomUUID()).id2(95L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
-            sendRequestInsert(funko);*/
+            Funko funko = Funko.builder().cod(UUID.randomUUID()).id2(95L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
+
+            sendRequestInsert(funko);
 
             sendRequestByRelease(LocalDate.of(2022, 5, 1));
 
@@ -214,7 +217,7 @@ public class Client {
         Request<LocalDate> request = new Request<>(FINDBYRELEASEDATE, release, token, LocalDateTime.now().toString());
         sendRequest(request);
 
-        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response<List<Funko>>>() {
         }.getType());
         logger.debug("Respuesta recibida: " + response.toString());
 
@@ -228,7 +231,8 @@ public class Client {
     }
 
     private void sendRequestInsert(Funko funko) throws ClientException, IOException {
-        Request<Funko> request = new Request<>(INSERT, funko, token, LocalDateTime.now().toString());
+        var funkoJson = gson.toJson(funko);
+        Request<String> request = new Request<>(INSERT, funkoJson, token, LocalDateTime.now().toString());
         sendRequest(request);
 
         Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {

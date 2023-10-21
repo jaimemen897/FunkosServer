@@ -1,6 +1,11 @@
 package server;
 
+import adapters.FunkoAdapter;
+import adapters.LocalDateAdapter2;
+import adapters.LocalDateTimeAdapter;
+import adapters.UuidAdapter;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import common.Login;
 import common.Request;
@@ -34,7 +39,11 @@ import static common.Response.Status.*;
 public class ClientHandler extends Thread {
     private final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
     private final Socket clientSocket;
-    private final Gson gson;
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Funko.class, new FunkoAdapter())
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter2())
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .registerTypeAdapter(UUID.class, new UuidAdapter()).create();
     private final long clientNumber;
     private final TokenService tokenService;
     private final FunkosServiceImpl funkosService;
@@ -43,7 +52,7 @@ public class ClientHandler extends Thread {
 
     public ClientHandler(Socket socket, long clientNumber) {
         this.clientSocket = socket;
-        this.gson = new Gson();
+
         this.clientNumber = clientNumber;
         this.tokenService = TokenService.getInstance();
         this.funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
@@ -206,14 +215,14 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processInsert(Request<Funko> request) {
+    private void processInsert(Request<String> request) {
         logger.debug("Petición de insertar un registro recibida: " + request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
-            System.out.println(request.content());
-            Funko funko = request.content();
-            funkosService.saveWithNoNotifications(funko).subscribe(funkoInsert -> {
+            var funkoJson = gson.fromJson(request.content(), Funko.class);
+
+            funkosService.saveWithNoNotifications(funkoJson).subscribe(funkoInsert -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
                 out.println(gson.toJson(new Response<>(Response.Status.OK, funkoInsert, LocalDateTime.now().toString())));
             }, error -> {
