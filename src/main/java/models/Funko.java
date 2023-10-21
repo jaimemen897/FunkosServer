@@ -14,7 +14,6 @@ import java.util.UUID;
 @Builder
 @JsonAdapter(LocalDateAdapter.class)
 public class Funko {
-
     private final UUID cod;
     private final Long id2;
     private final LocalDate fechaLanzamiento;
@@ -25,4 +24,18 @@ public class Funko {
     private LocalDateTime createdAt = LocalDateTime.now();
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Override
+    public String toString() {
+        return "Funko{" +
+                "cod=" + cod +
+                ", id2=" + id2 +
+                ", fechaLanzamiento=" + fechaLanzamiento +
+                ", nombre='" + nombre + '\'' +
+                ", modelo=" + modelo +
+                ", precio=" + precio +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }

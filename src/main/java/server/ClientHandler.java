@@ -1,89 +1,289 @@
 package server;
 
-
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
-
+import adapters.FunkoAdapter;
+import adapters.LocalDateAdapter2;
+import adapters.LocalDateTimeAdapter;
+import adapters.UuidAdapter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import common.Login;
+import common.Request;
+import common.Response;
+import enums.Modelo;
+import exceptions.Server.ServerException;
+import models.Funko;
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
+import repositories.funkos.FunkoRepositoryImpl;
+import server.repositories.UserRepository;
+import server.services.TokenService;
+import services.database.DataBaseManager;
+import services.funkos.FunkosNotificationsImpl;
+import services.funkos.FunkosServiceImpl;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import static common.Response.Status.*;
 
 public class ClientHandler extends Thread {
-    private final Socket clientSocket;
-    private final InputStream inStream;
-    private final OutputStreamWriter outStream;
     private final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
+    private final Socket clientSocket;
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Funko.class, new FunkoAdapter())
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter2())
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .registerTypeAdapter(UUID.class, new UuidAdapter()).create();
+    private final long clientNumber;
+    private final TokenService tokenService;
+    private final FunkosServiceImpl funkosService;
+    BufferedReader in;
+    PrintWriter out;
 
-    public static final String TOKEN_SECRET = "secret";
-    public static final long TOKEN_EXPIRATION = 60000;
-
-    public ClientHandler(Socket socket) throws Exception {
+    public ClientHandler(Socket socket, long clientNumber) {
         this.clientSocket = socket;
+
+        this.clientNumber = clientNumber;
+        this.tokenService = TokenService.getInstance();
+        this.funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
+    }
+
+    public void openConnection() {
+        logger.debug("Conectando con el cliente nº: " + clientNumber + " : " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
         try {
-            this.inStream = clientSocket.getInputStream();
-            this.outStream = new OutputStreamWriter(clientSocket.getOutputStream());
-            System.out.println("Cliente conectado: " + socket.getInetAddress().getHostAddress());
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            logger.debug("Conexión establecida con el cliente nº: " + clientNumber);
         } catch (Exception e) {
-            throw new Exception("Error al crear los streams de entrada y salida: " + e.getMessage());
+            logger.error("Error al abrir la conexión con el cliente nº: " + clientNumber + " : " + e.getMessage());
+        }
+    }
+
+    public void closeConnection() {
+        logger.debug("Cerrando conexión con el cliente nº: " + clientNumber);
+        try {
+            in.close();
+            out.close();
+            clientSocket.close();
+            logger.debug("Conexión cerrada con el cliente nº: " + clientNumber);
+        } catch (Exception e) {
+            logger.error("Error al cerrar la conexión con el cliente nº: " + clientNumber + " : " + e.getMessage());
         }
     }
 
     public void run() {
+        logger.makeLoggingEventBuilder(Level.DEBUG);
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(inStream));
-            PrintWriter out = new PrintWriter(outStream, true);
+            openConnection();
+
             String clientInput;
+            Request request;
 
-            clientInput = in.readLine();
+            while (true) {
+                clientInput = in.readLine();
+                logger.debug("Mensaje recibido del cliente nº: " + clientNumber + " : " + clientInput);
+                request = gson.fromJson(clientInput, Request.class);
+                handleRequest(request);
 
-            if (clientInput.equals("Hola")) {
-                out.println(createToken(TOKEN_SECRET, TOKEN_EXPIRATION));
-            } else {
-                out.println("Adios");
             }
-
-            clientInput = in.readLine();
-            if (verifyToken(clientInput, TOKEN_SECRET)) {
-                out.println("Token verificado");
-            } else {
-                out.println("Error");
-            }
-
-            out.close();
-            in.close();
-            clientSocket.close();
-            System.out.println("Cliente desconectado: " + clientSocket.getInetAddress().getHostAddress());
         } catch (IOException e) {
-            System.out.println("Error al leer el mensaje del cliente: " + e.getMessage());
+            logger.error("Error al leer el mensaje del cliente nº: " + clientNumber + " : " + e.getMessage());
+        } catch (ServerException a) {
+            out.println(gson.toJson(new Response<>(ERROR, a.getMessage(), LocalDateTime.now().toString())));
+        } finally {
+            closeConnection();
         }
     }
 
-    public String createToken(String tokenSecret, long tokenExpiration) {
-        logger.debug("Creando token");
-        Algorithm algorithm = Algorithm.HMAC256(tokenSecret);
-        return JWT.create()
-                .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + tokenExpiration))
-                .sign(algorithm);
+    @SuppressWarnings("unchecked")
+    private void handleRequest(Request request) throws ServerException {
+        logger.debug("Procesando petición del cliente nº: " + clientNumber);
+        switch (request.type()) {
+            case LOGIN -> processLogin(request);
+            case FINDALL -> processFindAll(request);
+            case FINDBYCODE -> processFindByCode(request);
+            case FINDBYMODELO -> processFindByModelo(request);
+            case FINDBYRELEASEDATE -> processByReleaseDate(request);
+            case INSERT -> processInsert(request);
+            case UPDATE -> processUpdate(request);
+            case DELETE -> processDelete(request);
+            case EXIT -> processExit();
+            default -> new Response<>(ERROR, "Petición no válida", LocalDateTime.now().toString());
+        }
     }
 
-    public boolean verifyToken(String token, String tokenSecret) {
-        logger.debug("Verificando token");
-        Algorithm algorithm = Algorithm.HMAC256(tokenSecret);
-        try {
-            JWTVerifier verifier = JWT.require(algorithm)
-                    .build();
-            DecodedJWT decodedJWT = verifier.verify(token);
-            logger.debug("Token verificado");
-            return true;
-        } catch (Exception e) {
-            logger.error("Error al verificar el token: " + e.getMessage());
-            return false;
+    private void processLogin(Request<String> request) throws ServerException {
+        logger.debug("Petición de login recibida: " + request);
+
+        Login login = gson.fromJson(request.content(), new TypeToken<Login>() {
+        }.getType());
+
+        var user = UserRepository.getInstance().findByUsername(login.username());
+        if (user.isEmpty() || !BCrypt.checkpw(login.password(), user.get().password())) {
+            logger.warn("Usuario no encontrado o falla la contraseña");
+            throw new ServerException("Usuario o contraseña incorrectos");
         }
+
+        var token = TokenService.getInstance().createToken(user.get(), Server.TOKEN_SECRET, Server.TOKEN_EXPIRATION);
+
+        logger.debug("Respuesta enviada: " + token);
+        out.println(gson.toJson(new Response<>(Response.Status.TOKEN, token, LocalDateTime.now().toString())));
+    }
+
+    private void processFindAll(Request request) {
+        logger.debug("Petición de obtener todos los funkos recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            funkosService.findAll().collectList().subscribe(funkos -> {
+                logger.debug("Enviando respuesta: " + funkos);
+                var resJson = gson.toJson(funkos);
+                out.println(gson.toJson(new Response(Response.Status.OK, resJson, LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processFindByCode(Request<String> request) {
+        logger.debug("Petición de obtener un funko por código recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            var cod = request.content();
+            funkosService.findByCodigo(cod).subscribe(funko -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                var resJson = gson.toJson(funko);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, resJson, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al buscar el funko por código: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(ERROR, "Error al buscar el funko por código: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processFindByModelo(Request<Modelo> request) {
+        logger.debug("Petición de obtener un funko por modelo recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            Modelo modelo = Modelo.valueOf(String.valueOf(request.content()));
+            System.out.println(modelo);
+            funkosService.findByModelo(modelo).collectList().subscribe(funkos -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                var resJson= gson.toJson(funkos);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, resJson, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al buscar el funko por modelo: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(ERROR, "Error al buscar el funko por modelo: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processByReleaseDate(Request<LocalDate> request) {
+        logger.debug("Petición de obtener un funko por fecha de lanzamiento recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            LocalDate fecha = LocalDate.parse(String.valueOf(request.content()));
+            funkosService.findByReleaseDate(fecha).collectList().subscribe(funkos -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkos, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al buscar el funko por fecha de lanzamiento: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(ERROR, "Error al buscar el funko por fecha de lanzamiento: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processInsert(Request<String> request) {
+        logger.debug("Petición de insertar un registro recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            var funkoJson = gson.fromJson(request.content(), Funko.class);
+
+            funkosService.saveWithNoNotifications(funkoJson).subscribe(funkoInsert -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkoInsert, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al insertar el funko: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(ERROR, "Error al insertar el funko: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processUpdate(Request<Funko> request) {
+        logger.debug("Petición de actualizar un registro recibida: " + request);
+        var token = request.token();
+        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+            logger.debug("Token válido");
+            var funkoJson = gson.fromJson(String.valueOf(request.content()), Funko.class);
+            funkosService.updateWithNoNotifications(funkoJson).subscribe(funkoUpdate -> {
+                logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                out.println(gson.toJson(new Response<>(Response.Status.OK, funkoUpdate, LocalDateTime.now().toString())));
+            }, error -> {
+                logger.error("Error al actualizar el funko: " + error.getMessage());
+                out.println(gson.toJson(new Response<>(ERROR, "Error al actualizar el funko: " + error.getMessage(), LocalDateTime.now().toString())));
+            });
+        } else {
+            logger.warn("Token no válido");
+            out.println(gson.toJson(new Response<>(ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+        }
+    }
+
+    private void processDelete(Request<String> request) {
+        logger.debug("Petición de borrar un registro recibida: " + request);
+        var token = request.token();
+        //verificar que el role del usuario es admin
+        if (tokenService.verifyAdmin(token, Server.TOKEN_SECRET)){
+            if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+                logger.debug("Token válido");
+                var id = request.content();
+                long idLong = Long.parseLong(String.valueOf(id));
+                funkosService.deleteByIdWithoutNotification(idLong).subscribe(funkoDelete -> {
+                    logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
+                    out.println(gson.toJson(new Response<>(Response.Status.OK, funkoDelete, LocalDateTime.now().toString())));
+                }, error -> {
+                    logger.error("Error al borrar el funko: " + error.getMessage());
+                    out.println(gson.toJson(new Response<>(ERROR, "Error al borrar el funko: " + error.getMessage(), LocalDateTime.now().toString())));
+                });
+            } else {
+                logger.warn("Token no válido");
+                out.println(gson.toJson(new Response<>(ERROR, "Token no válido o caducado", LocalDateTime.now().toString())));
+            }
+        } else {
+            logger.warn("El usuario no es admin");
+            out.println(gson.toJson(new Response<>(ERROR, "El usuario no es admin", LocalDateTime.now().toString())));
+        }
+
+    }
+
+    private void processExit() {
+        logger.debug("Petición de salida recibida");
+        out.println(gson.toJson(new Response<>(Response.Status.EXIT, "Saliendo del servidor", LocalDateTime.now().toString())));
+        closeConnection();
     }
 }

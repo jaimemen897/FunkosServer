@@ -11,9 +11,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import repositories.funkos.FunkoRepositoryImpl;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FunkosServiceImpl implements FunkosService {
@@ -56,6 +58,21 @@ public class FunkosServiceImpl implements FunkosService {
                 .switchIfEmpty(funkoRepository.findById(id)
                         .flatMap(funko1 -> cache.put(funko1.getId2(), funko1).then(Mono.just(funko1)))
                         .switchIfEmpty(Mono.error(new FunkoNotFoundException("Funko con ID: " + id + NOT_FOUND))));
+    }
+
+    @Override
+    public Mono<Funko> findByCodigo(String codigo){
+        return funkoRepository.findByCodigo(codigo).flatMap(funko -> cache.put(funko.getId2(), funko).then(Mono.just(funko))).switchIfEmpty(Mono.error(new FunkoNotFoundException("No se ha encontrado ningún funko con el código: " + codigo)));
+    }
+
+    @Override
+    public Flux<Funko> findByReleaseDate(LocalDate localDate){
+        return funkoRepository.findByReleaseDate(localDate).flatMap(funko -> cache.put(funko.getId2(), funko).then(Mono.just(funko))).switchIfEmpty(Mono.error(new FunkoNotFoundException("No se ha encontrado ningún funko con la fecha de lanzamiento: " + localDate)));
+    }
+
+    @Override
+    public Flux<Funko> findByModelo(Modelo modelo) {
+        return funkoRepository.findByModelo(modelo).flatMap(funko -> cache.put(funko.getId2(), funko).then(Mono.just(funko))).switchIfEmpty(Mono.error(new FunkoNotFoundException("No se ha encontrado ningún funko con el modelo: " + modelo)));
     }
 
     public Mono<Funko> saveWithNoNotifications(Funko funko) {

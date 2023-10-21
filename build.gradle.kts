@@ -22,7 +22,7 @@ dependencies {
     implementation("org.mybatis:mybatis:3.5.13")
     implementation("com.h2database:h2:2.1.210")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.slf4j:slf4j-simple:2.0.9")
+    implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("com.google.code.gson:gson:2.10.1")
     // JWT
     implementation("com.auth0:java-jwt:4.2.1")
