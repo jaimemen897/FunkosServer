@@ -15,7 +15,8 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static io.r2dbc.spi.ConnectionFactoryOptions.*;
-import static routes.Routes.*;
+import static routes.Routes.CREATE_SQL_FILE;
+import static routes.Routes.REMOVE_SQL_FILE;
 
 @Getter
 public class DataBaseManager {

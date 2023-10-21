@@ -30,8 +30,8 @@ public class TokenService {
     /**
      * Crea un token para el usuario
      *
-     * @param user           Usuario
-     * @param tokenSecret    Clave secreta para firmar el token
+     * @param user            Usuario
+     * @param tokenSecret     Clave secreta para firmar el token
      * @param tokenExpiration Tiempo de expiracion del token en milisegundos
      * @return Token
      */

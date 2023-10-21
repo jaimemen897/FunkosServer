@@ -6,7 +6,7 @@ import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Result;
 import models.Funko;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import services.database.DataBaseManager;
@@ -17,15 +17,14 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class FunkoRepositoryImpl implements FunkoRepository {
+    private static final String LOG_NAME = "nombre";
+    private static final String LOG_MODELO = "modelo";
+    private static final String LOG_PRECIO = "precio";
+    private static final String LOG_FECHA_LANZAMIENTO = "fechaLanzamiento";
     private static FunkoRepositoryImpl instance;
     private final Logger logger = LoggerFactory.getLogger(FunkoRepositoryImpl.class);
     private final ConnectionPool connectionFactory;
     private final FunkoStorageImpl funkoStorage = FunkoStorageImpl.getInstance();
-
-    private static final String LOG_NAME = "nombre";
-    private static final String LOG_MODELO = "modelo";
-    private static final String LOG_PRECIO= "precio";
-    private static final String LOG_FECHA_LANZAMIENTO = "fechaLanzamiento";
 
     private FunkoRepositoryImpl(DataBaseManager db) {
         this.connectionFactory = db.getConnectionPool();
@@ -102,14 +101,14 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     }
 
     @Override
-    public Mono<Funko> findByCodigo(String code){
+    public Mono<Funko> findByCodigo(String code) {
         logger.debug("Buscando funko por codigo: " + code);
         UUID uuid = UUID.fromString(code);
         String query = "SELECT * FROM FUNKOS WHERE cod = ?";
         return Mono.usingWhen(
                 connectionFactory.create(),
                 connection -> Mono.from(connection.createStatement(query)
-                        .bind(0, code.toString())
+                        .bind(0, code)
                         .execute()
                 ).flatMap(result -> Mono.from(result.map((fila, datos) ->
                         Funko.builder()
@@ -126,7 +125,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     }
 
     @Override
-    public Flux<Funko> findByModelo(Modelo modelo){
+    public Flux<Funko> findByModelo(Modelo modelo) {
         logger.debug("Buscando funko por modelo: " + modelo);
         String query = "SELECT * FROM FUNKOS WHERE modelo = ?";
         return Flux.usingWhen(
@@ -149,7 +148,7 @@ public class FunkoRepositoryImpl implements FunkoRepository {
     }
 
     @Override
-    public Flux<Funko> findByReleaseDate(LocalDate fecha){
+    public Flux<Funko> findByReleaseDate(LocalDate fecha) {
         logger.debug("Buscando funko por fecha de lanzamiento: " + fecha);
         String query = "SELECT * FROM FUNKOS WHERE fechaLanzamiento = ?";
         return Flux.usingWhen(

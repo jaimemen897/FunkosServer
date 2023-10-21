@@ -15,17 +15,16 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FunkosServiceImpl implements FunkosService {
+    private static final String NOT_FOUND = "no encontrado";
     private static FunkosServiceImpl instance;
     private final FunkoCache cache;
     private final Logger logger = LoggerFactory.getLogger(FunkosServiceImpl.class);
     private final FunkoRepositoryImpl funkoRepository;
     private final FunkosNotifications notification;
     private final FunkoStorageImpl funkoStorage = FunkoStorageImpl.getInstance();
-    private static final String NOT_FOUND = "no encontrado";
 
     private FunkosServiceImpl(FunkoRepositoryImpl funkoRepository, FunkosNotifications notification) {
         this.funkoRepository = funkoRepository;
@@ -61,12 +60,12 @@ public class FunkosServiceImpl implements FunkosService {
     }
 
     @Override
-    public Mono<Funko> findByCodigo(String codigo){
+    public Mono<Funko> findByCodigo(String codigo) {
         return funkoRepository.findByCodigo(codigo).flatMap(funko -> cache.put(funko.getId2(), funko).then(Mono.just(funko))).switchIfEmpty(Mono.error(new FunkoNotFoundException("No se ha encontrado ningún funko con el código: " + codigo)));
     }
 
     @Override
-    public Flux<Funko> findByReleaseDate(LocalDate localDate){
+    public Flux<Funko> findByReleaseDate(LocalDate localDate) {
         return funkoRepository.findByReleaseDate(localDate).flatMap(funko -> cache.put(funko.getId2(), funko).then(Mono.just(funko))).switchIfEmpty(Mono.error(new FunkoNotFoundException("No se ha encontrado ningún funko con la fecha de lanzamiento: " + localDate)));
     }
 
@@ -102,6 +101,7 @@ public class FunkosServiceImpl implements FunkosService {
         return updateWithNoNotifications(funko)
                 .doOnSuccess(updated -> notification.notify(new Notificacion<>(Tipo.UPDATED, updated)));
     }
+
     public Mono<Funko> deleteByIdWithoutNotification(long id) {
         logger.info("Borrando funko sin notificación con id: {}", id);
         return funkoRepository.findById(id).switchIfEmpty(Mono.error(new FunkoNotFoundException("Funko con id " + id + NOT_FOUND))).flatMap(funko -> funkoRepository.deleteById(id).then(Mono.just(funko)));
@@ -111,7 +111,7 @@ public class FunkosServiceImpl implements FunkosService {
     public Mono<Boolean> deleteById(long id) {
         logger.info("Eliminando: {}", id);
         return deleteByIdWithoutNotification(id).doOnSuccess(deleted -> notification.
-                notify(new Notificacion<>(Tipo.DELETED, deleted)))
+                        notify(new Notificacion<>(Tipo.DELETED, deleted)))
                 .map(funko -> true);
     }
 

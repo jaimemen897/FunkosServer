@@ -33,7 +33,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static common.Response.Status.*;
+import static common.Response.Status.ERROR;
 
 public class ClientHandler extends Thread {
     private final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
@@ -184,7 +184,7 @@ public class ClientHandler extends Thread {
             System.out.println(modelo);
             funkosService.findByModelo(modelo).collectList().subscribe(funkos -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
-                var resJson= gson.toJson(funkos);
+                var resJson = gson.toJson(funkos);
                 out.println(gson.toJson(new Response<>(Response.Status.OK, resJson, LocalDateTime.now().toString())));
             }, error -> {
                 logger.error("Error al buscar el funko por modelo: " + error.getMessage());
@@ -258,7 +258,7 @@ public class ClientHandler extends Thread {
         logger.debug("Petición de borrar un registro recibida: " + request);
         var token = request.token();
         //verificar que el role del usuario es admin
-        if (tokenService.verifyAdmin(token, Server.TOKEN_SECRET)){
+        if (tokenService.verifyAdmin(token, Server.TOKEN_SECRET)) {
             if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
                 logger.debug("Token válido");
                 var id = request.content();

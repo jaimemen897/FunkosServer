@@ -2,7 +2,6 @@ package server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 import repositories.funkos.FunkoRepositoryImpl;
 import services.PropertiesReader;
 import services.database.DataBaseManager;
@@ -21,14 +20,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Server {
 
-    private static final Logger logger = LoggerFactory.getLogger(Server.class);
-
-    public static String TOKEN_SECRET;
-    public static long TOKEN_EXPIRATION;
     public static final int PUERTO = 3000;
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private static final AtomicLong clientNumber = new AtomicLong(0);
     private static final FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
-
+    public static String TOKEN_SECRET;
+    public static long TOKEN_EXPIRATION;
 
     public static Map<String, String> readEnv() {
         try {

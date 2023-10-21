@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import repositories.funkos.FunkoRepositoryImpl;
 import routes.Routes;
 
 import java.io.BufferedReader;
@@ -24,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static routes.Routes.*;
+import static routes.Routes.ROUTE_FUNKOS_CSV;
 
 public class FunkoStorageImpl implements FunkoStorage {
     private static FunkoStorageImpl instance;
@@ -40,7 +39,7 @@ public class FunkoStorageImpl implements FunkoStorage {
 
     public static FunkoStorageImpl getInstance() {
         if (instance == null) {
-             instance = new FunkoStorageImpl();
+            instance = new FunkoStorageImpl();
         }
         return instance;
     }

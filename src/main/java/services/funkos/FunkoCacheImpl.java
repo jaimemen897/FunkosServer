@@ -13,8 +13,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class FunkoCacheImpl implements FunkoCache {
-    private final Logger logger = LoggerFactory.getLogger(FunkoCacheImpl.class);
     private static final int MAX_SIZE = 15;
+    private final Logger logger = LoggerFactory.getLogger(FunkoCacheImpl.class);
     private final Map<Long, Funko> cache;
     private final ScheduledExecutorService cleaner;
 
