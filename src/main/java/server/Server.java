@@ -55,12 +55,11 @@ public class Server {
 
             return configMap;
         } catch (FileNotFoundException e) {
-            String errorMessage = String.format("Error en clave: %s", e.getLocalizedMessage());
-            logger.error(errorMessage);
+            logger.error("Error en clave: {}", e.getLocalizedMessage());
+            System.exit(1);
             return Map.of();
         } catch (IOException e) {
-            String errorMessage = String.format("Error al leer el fichero de propiedades: %s", e.getLocalizedMessage());
-            logger.error(errorMessage);
+            logger.error("Error al leer el fichero de propiedades: {}", e.getLocalizedMessage());
             return Map.of();
         }
     }
@@ -83,14 +82,14 @@ public class Server {
         }
     }
 
-    private static void runServer() {
-        boolean bucleRun = true;
-        while (bucleRun) {
-            try {
+    @SuppressWarnings("all")
+    private static void runServer() throws IOException {
+        try {
+            while (true) {
                 new ClientHandler(createServerSocket().accept(), clientNumber.getAndIncrement()).start();
-            } catch (Exception e) {
-                bucleRun = false;
             }
+        } catch (IOException e) {
+            logger.error("🔴 Error al iniciar la conexión: {}", e.getLocalizedMessage());
         }
     }
 
