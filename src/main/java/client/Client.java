@@ -56,16 +56,19 @@ public class Client {
     public void start() throws IOException {
         try {
             openConnection();
-            token = sendRequestLogin();
+
+            sendRequestLogin();
 
             sendRequestFindAll();
 
             sendRequestFindByCode(UUID.fromString("f8f7ae42-5b01-4d3b-82ab-02d1a2d6e443"));
 
-            sendRequestDelete(token, "1");
+            sendRequestDelete("1");
 
             sendRequestFindByModelo(Modelo.DISNEY);
 
+            /*var funko = Funko.builder().cod(UUID.randomUUID()).id2(95L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
+            sendRequestInsert(funko);*/
 
             sendRequestByRelease(LocalDate.of(2022, 5, 1));
 
@@ -116,43 +119,37 @@ public class Client {
         }
     }
 
-    private String sendRequestLogin() throws ClientException {
-        String myToken = null;
-        var loginJson = gson.toJson(new Login("user", "user"));
-
-        Request request = new Request(LOGIN, loginJson, myToken, LocalDateTime.now().toString());
-
-        System.out.println("Petición enviada de tipo: " + LOGIN);
+    private void sendRequest(Request<?> request) {
+        System.out.println("Petición enviada de tipo: " + request.type());
         logger.debug("Petición enviada: " + request);
         out.println(gson.toJson(request));
-
-        try {
-            Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
-            }.getType());
-            logger.debug("Respuesta recibida: " + response.toString());
-            System.out.println("Respuesta recibida de tipo: " + response.status());
-
-            switch (response.status()) {
-                case TOKEN -> {
-                    System.out.println("🟢 Mi token es: " + response.content());
-                    myToken = (String) response.content();
-                }
-                default -> throw new ClientException("LOGIN - Tipo de respuesta no esperado: " + response.content());
-            }
-        } catch (IOException e) {
-            logger.error("Error: " + e.getMessage());
-        }
-        return myToken;
     }
 
-    private void sendRequestDelete(String token, String id) throws ClientException, IOException {
-        Request request = new Request(DELETE, id, token, LocalDateTime.now().toString());
-        System.out.println("Petición enviada de tipo: " + DELETE);
-        logger.debug("Petición enviada: " + request);
+    private void sendRequestLogin() throws ClientException, IOException {
+        var loginJson = gson.toJson(new Login("user", "user"));
+        Request<String> request = new Request<>(LOGIN, loginJson, token, LocalDateTime.now().toString());
+        sendRequest(request);
 
-        out.println(gson.toJson(request));
+        Response<String> response = gson.fromJson(in.readLine(), new TypeToken<Response<String>>() {
+        }.getType());
+        logger.debug("Respuesta recibida: " + response.toString());
+        System.out.println("Respuesta recibida de tipo: " + response.status());
 
-        Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        switch (response.status()) {
+            case TOKEN -> {
+                System.out.println("🟢 Mi token es: " + response.content());
+                token = response.content();
+            }
+            case ERROR -> System.err.println("🔴 Error: " + response.content());
+            default -> throw new ClientException("LOGIN - Tipo de respuesta no esperado: " + response.content());
+        }
+    }
+
+    private void sendRequestDelete(String id) throws ClientException, IOException {
+        Request<String> request = new Request<>(DELETE, id, token, LocalDateTime.now().toString());
+        sendRequest(request);
+
+        Response<?> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
         }.getType());
         logger.debug("Respuesta recibida: " + response.toString());
 
@@ -166,10 +163,8 @@ public class Client {
     }
 
     private void sendRequestFindAll() throws IOException, ClientException {
-        Request request = new Request<>(FINDALL, null, token, LocalDateTime.now().toString());
-        System.out.println("Petición enviada de tipo: " + FINDALL);
-        logger.debug("Petición enviada: " + request);
-        out.println(gson.toJson(request));
+        Request<List<Funko>> request = new Request<>(FINDALL, null, token, LocalDateTime.now().toString());
+        sendRequest(request);
 
         Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
         }.getType());
@@ -184,9 +179,7 @@ public class Client {
 
     private void sendRequestFindByCode(UUID cod) throws IOException, ClientException {
         Request<UUID> request = new Request<>(FINDBYCODE, cod, token, LocalDateTime.now().toString());
-        System.out.println("Petición enviada de tipo: " + FINDBYCODE);
-        logger.debug("Petición enviada: " + request);
-        out.println(gson.toJson(request));
+        sendRequest(request);
 
         Response<UUID> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
         }.getType());
@@ -197,15 +190,14 @@ public class Client {
 
         switch (response.status()) {
             case OK -> System.out.println("🟢 Funko encontrado: " + response.content());
+            case ERROR -> System.err.println("🔴 Error: " + response.content());
             default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
         }
     }
 
     private void sendRequestFindByModelo(Modelo modelo) throws ClientException, IOException {
         Request<Modelo> request = new Request<>(FINDBYMODELO, modelo, token, LocalDateTime.now().toString());
-        System.out.println("Petición enviada de tipo: " + FINDBYMODELO);
-        logger.debug("Petición enviada: " + request);
-        out.println(gson.toJson(request));
+        sendRequest(request);
 
         Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
         }.getType());
@@ -216,16 +208,30 @@ public class Client {
             case OK -> System.out.println("🟢 Lista de funkos por modelo: " + response.content());
             default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
         }
-
     }
 
     private void sendRequestByRelease(LocalDate release) throws ClientException, IOException {
         Request<LocalDate> request = new Request<>(FINDBYRELEASEDATE, release, token, LocalDateTime.now().toString());
-        out.println(gson.toJson(request));
-        System.out.println("Petición enviada de tipo: " + FINDBYRELEASEDATE);
-        logger.debug("Petición enviada: " + request);
+        sendRequest(request);
 
         Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        }.getType());
+        logger.debug("Respuesta recibida: " + response.toString());
+
+        System.out.println("Respuesta recibida de tipo: " + response.status());
+
+        switch (response.status()) {
+            case OK -> System.out.println("🟢 Lista de funkos por fecha de lanzamiento: " + response.content());
+            case ERROR -> System.err.println("🔴 Error: " + response.content());
+            default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
+        }
+    }
+
+    private void sendRequestInsert(Funko funko) throws ClientException, IOException {
+        Request<Funko> request = new Request<>(INSERT, funko, token, LocalDateTime.now().toString());
+        sendRequest(request);
+
+        Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
         }.getType());
 
         logger.debug("Respuesta recibida: " + response.toString());
@@ -233,18 +239,15 @@ public class Client {
         System.out.println("Respuesta recibida de tipo: " + response.status());
 
         switch (response.status()) {
-            case OK -> System.out.println("🟢 Lista de funkos por fecha de lanzamiento: " + response.content());
+            case OK -> System.out.println("🟢 Funko insertado correctamente: " + response.content());
+            case ERROR -> System.err.println("🔴 Error: " + response.content());
             default -> throw new ClientException("Tipo de respuesta no esperado: " + response.content());
         }
-
     }
 
     private void sendRequestSalir() throws IOException, ClientException {
         Request request = new Request(EXIT, null, token, LocalDateTime.now().toString());
-        System.out.println("Petición enviada de tipo: " + EXIT);
-        logger.debug("Petición enviada: " + request);
-
-        out.println(gson.toJson(request));
+        sendRequest(request);
 
         Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
         }.getType());

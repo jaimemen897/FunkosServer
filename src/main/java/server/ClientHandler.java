@@ -211,7 +211,8 @@ public class ClientHandler extends Thread {
         var token = request.token();
         if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
             logger.debug("Token válido");
-            var funko = request.content();
+            System.out.println(request.content());
+            Funko funko = request.content();
             funkosService.saveWithNoNotifications(funko).subscribe(funkoInsert -> {
                 logger.debug("Enviando respuesta al cliente nº: " + clientNumber);
                 out.println(gson.toJson(new Response<>(Response.Status.OK, funkoInsert, LocalDateTime.now().toString())));
@@ -244,7 +245,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processDelete(Request request) {
+    private void processDelete(Request<String> request) {
         logger.debug("Petición de borrar un registro recibida: " + request);
         var token = request.token();
         //verificar que el role del usuario es admin
