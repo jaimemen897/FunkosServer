@@ -37,6 +37,9 @@ import java.util.UUID;
 import static common.Response.Status.ERROR;
 
 public class ClientHandler extends Thread {
+    private static final String TOKEN_VALIDO = "Token valido";
+    private static final String TOKEN_NO_VALIDO = "Token no valido";
+    private static final String SEND_RESPONSE = "Enviando respuesta al cliente nº: {}";
     private final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
     private final Socket clientSocket;
     private final Gson gson = new GsonBuilder()
@@ -47,9 +50,6 @@ public class ClientHandler extends Thread {
     private final long clientNumber;
     private final TokenService tokenService;
     private final FunkosServiceImpl funkosService;
-    private static final String TOKEN_VALIDO = "Token valido";
-    private static final String TOKEN_NO_VALIDO = "Token no valido";
-    private static final String SEND_RESPONSE = "Enviando respuesta al cliente nº: {}";
     BufferedReader in;
     PrintWriter out;
 

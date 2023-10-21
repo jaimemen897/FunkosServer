@@ -14,9 +14,9 @@ import java.util.Map;
 import java.util.UUID;
 
 public class TokenService {
+    private static final String VERIFICATION_MESSAGE = "Verificando token";
     private static TokenService instance = null;
     private final Logger logger = LoggerFactory.getLogger(TokenService.class);
-    private static final String VERIFICATION_MESSAGE = "Verificando token";
 
     private TokenService() {
     }

@@ -24,10 +24,10 @@ public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private static final AtomicLong clientNumber = new AtomicLong(0);
     private static final FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
-    static String tokenSecret;
-    static long tokenExpiration;
     private static final String KEYFILE = "keyFile";
     private static final String KEYPASSWORD = "keyPassword";
+    static String tokenSecret;
+    static long tokenExpiration;
 
     public static Map<String, String> readEnv() {
         try {
