@@ -13,6 +13,7 @@ import common.Response;
 import enums.Modelo;
 import exceptions.client.ClientException;
 import models.Funko;
+import org.apache.ibatis.jdbc.Null;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import services.PropertiesReader;
@@ -178,7 +179,7 @@ public class Client {
         Request<List<Funko>> request = new Request<>(FINDALL, null, token, LocalDateTime.now().toString());
         sendRequest(request);
 
-        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
         }.getType());
         logger.debug(RECEIVED_RESPONSE, response);
         logger.info(RECEIVED_RESPONSE_TYPE, response.status());
@@ -194,7 +195,7 @@ public class Client {
         Request<UUID> request = new Request<>(FINDBYCODE, cod, token, LocalDateTime.now().toString());
         sendRequest(request);
 
-        Response<UUID> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        Response<UUID> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
         }.getType());
 
         logger.debug(RECEIVED_RESPONSE, response);
@@ -212,7 +213,7 @@ public class Client {
         Request<Modelo> request = new Request<>(FINDBYMODELO, modelo, token, LocalDateTime.now().toString());
         sendRequest(request);
 
-        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
         }.getType());
         logger.debug(RECEIVED_RESPONSE, response);
         logger.info(RECEIVED_RESPONSE_TYPE, response.status());
@@ -228,7 +229,7 @@ public class Client {
         Request<LocalDate> request = new Request<>(FINDBYRELEASEDATE, release, token, LocalDateTime.now().toString());
         sendRequest(request);
 
-        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response<List<Funko>>>() {
+        Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
         }.getType());
         logger.debug(RECEIVED_RESPONSE, response);
 
@@ -246,7 +247,7 @@ public class Client {
         Request<String> request = new Request<>(INSERT, funkoJson, token, LocalDateTime.now().toString());
         sendRequest(request);
 
-        Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
         }.getType());
 
         logger.debug(RECEIVED_RESPONSE, response);
@@ -265,7 +266,7 @@ public class Client {
         Request<String> request = new Request<>(UPDATE, funkoJson, token, LocalDateTime.now().toString());
         sendRequest(request);
 
-        Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
         }.getType());
 
         logger.debug(RECEIVED_RESPONSE, response);
@@ -280,10 +281,10 @@ public class Client {
     }
 
     private void sendRequestSalir() throws IOException, ClientException {
-        Request request = new Request(EXIT, null, token, LocalDateTime.now().toString());
+        Request<Null> request = new Request<>(EXIT, null, token, LocalDateTime.now().toString());
         sendRequest(request);
 
-        Response response = gson.fromJson(in.readLine(), new TypeToken<Response>() {
+        Response<String> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
         }.getType());
         logger.debug(RECEIVED_RESPONSE, response);
 
