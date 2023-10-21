@@ -11,7 +11,7 @@ import common.Login;
 import common.Request;
 import common.Response;
 import enums.Modelo;
-import exceptions.Client.ClientException;
+import exceptions.client.ClientException;
 import models.Funko;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

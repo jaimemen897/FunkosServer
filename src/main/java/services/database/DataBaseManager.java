@@ -30,7 +30,6 @@ public class DataBaseManager {
     private String dbUser;
     private String dbPassword;
 
-
     private DataBaseManager() {
         loadResources();
 
@@ -57,7 +56,6 @@ public class DataBaseManager {
         }
     }
 
-
     public static synchronized DataBaseManager getInstance() {
         if (instance == null) {
             instance = new DataBaseManager();
@@ -77,7 +75,7 @@ public class DataBaseManager {
             initDataBase = Boolean.parseBoolean(properties.getProperty("db.init"));
 
         } catch (IOException e) {
-            logger.error("Error al leer el fichero de propiedades: " + e.getMessage());
+            logger.error("Error al iniciar el servidor: {}", e.getMessage());
         }
     }
 
@@ -90,7 +88,7 @@ public class DataBaseManager {
     }
 
     public Mono<Void> executeScripts(String script) {
-        logger.debug("Ejecutando script: " + script);
+        logger.debug("Ejecutando script: {}", script);
         return Mono.usingWhen(
                 connectionFactory.create(),
                 connection -> {

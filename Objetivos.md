@@ -1,3 +1,6 @@
+- Cosas pendientes: por qué en clientHandler se le pasa un Funko al método update y un String al insert
+- Cambiar los nombres de los métodos
+
 - [x] Estructura funkos csv
 
   * COD: En formato UUID v4
