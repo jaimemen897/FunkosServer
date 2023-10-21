@@ -24,18 +24,20 @@ public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private static final AtomicLong clientNumber = new AtomicLong(0);
     private static final FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
-    public static String TOKEN_SECRET;
-    public static long TOKEN_EXPIRATION;
+    static String tokenSecret;
+    static long tokenExpiration;
+    private static final String KEYFILE = "keyFile";
+    private static final String KEYPASSWORD = "keyPassword";
 
     public static Map<String, String> readEnv() {
         try {
             logger.debug("Leyendo el fichero de propiedades");
             PropertiesReader properties = new PropertiesReader("server.properties");
 
-            String keyFile = properties.getProperty("keyFile");
-            String keyPassword = properties.getProperty("keyPassword");
-            TOKEN_SECRET = properties.getProperty("tokenSecret");
-            TOKEN_EXPIRATION = Long.parseLong(properties.getProperty("tokenExpiration"));
+            String keyFile = properties.getProperty(KEYFILE);
+            String keyPassword = properties.getProperty(KEYPASSWORD);
+            tokenSecret = properties.getProperty("tokenSecret");
+            tokenExpiration = Long.parseLong(properties.getProperty("tokenExpiration"));
 
             if (keyFile.isEmpty() || keyPassword.isEmpty()) {
                 throw new IllegalStateException("Hay errores al procesar el fichero de propiedades o una de ellas está vacía");
@@ -46,43 +48,62 @@ public class Server {
             }
 
             Map<String, String> configMap = new HashMap<>();
-            configMap.put("keyFile", keyFile);
-            configMap.put("keyPassword", keyPassword);
-            configMap.put("tokenSecret", TOKEN_SECRET);
-            configMap.put("tokenExpiration", String.valueOf(TOKEN_EXPIRATION));
+            configMap.put(KEYFILE, keyFile);
+            configMap.put(KEYPASSWORD, keyPassword);
+            configMap.put("tokenSecret", tokenSecret);
+            configMap.put("tokenExpiration", String.valueOf(tokenExpiration));
 
             return configMap;
         } catch (FileNotFoundException e) {
-            logger.error("Error en clave: " + e.getLocalizedMessage());
-            System.exit(1);
-            return null;
+            String errorMessage = String.format("Error en clave: %s", e.getLocalizedMessage());
+            logger.error(errorMessage);
+            return Map.of();
         } catch (IOException e) {
-            logger.error("Error al leer el fichero de propiedades: " + e.getLocalizedMessage());
-            return null;
+            String errorMessage = String.format("Error al leer el fichero de propiedades: %s", e.getLocalizedMessage());
+            logger.error(errorMessage);
+            return Map.of();
         }
     }
 
-    public static void main(String[] args) {
+    public static void configureServer(Map<String, String> config) {
+        System.setProperty("javax.net.ssl.keyStore", config.get(KEYFILE));
+        System.setProperty("javax.net.ssl.keyStorePassword", config.get(KEYPASSWORD));
+    }
+
+    public static void startServer() {
         try {
             funkosService.importFromCsvNoNotify();
             var config = readEnv();
             logger.debug("Configurando el servidor");
-
-            System.setProperty("javax.net.ssl.keyStore", config.get("keyFile"));
-            System.setProperty("javax.net.ssl.keyStorePassword", config.get("keyPassword"));
-
-            SSLServerSocketFactory serverFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-            SSLServerSocket serverSocket = (SSLServerSocket) serverFactory.createServerSocket(PUERTO);
-
-            serverSocket.setEnabledCipherSuites(new String[]{"TLS_AES_128_GCM_SHA256"});
-            serverSocket.setEnabledProtocols(new String[]{"TLSv1.3"});
-            System.out.println("🟢 Servidor iniciado en el puerto " + PUERTO);
-
-            while (true) {
-                new ClientHandler(serverSocket.accept(), clientNumber.getAndIncrement()).start();
-            }
+            configureServer(config);
+            logger.info("🟢 Servidor iniciado en el puerto {}", PUERTO);
+            runServer();
         } catch (Exception e) {
-            System.out.println("🔴 Error al iniciar el servidor: " + e.getMessage());
+            logger.error("🔴 Error al iniciar el servidor: {}", e.getMessage());
         }
+    }
+
+    private static void runServer() {
+        boolean bucleRun = true;
+        while (bucleRun) {
+            try {
+                new ClientHandler(createServerSocket().accept(), clientNumber.getAndIncrement()).start();
+            } catch (Exception e) {
+                bucleRun = false;
+            }
+        }
+    }
+
+    private static SSLServerSocket createServerSocket() throws IOException {
+        SSLServerSocketFactory serverFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        SSLServerSocket serverSocket = (SSLServerSocket) serverFactory.createServerSocket(PUERTO);
+
+        serverSocket.setEnabledCipherSuites(new String[]{"TLS_AES_128_GCM_SHA256"});
+        serverSocket.setEnabledProtocols(new String[]{"TLSv1.3"});
+        return serverSocket;
+    }
+
+    public static void main(String[] args) {
+        startServer();
     }
 }

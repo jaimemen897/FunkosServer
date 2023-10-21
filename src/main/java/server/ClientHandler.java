@@ -133,7 +133,7 @@ public class ClientHandler extends Thread {
             throw new ServerException("Usuario o contraseña incorrectos");
         }
 
-        var token = TokenService.getInstance().createToken(user.get(), Server.TOKEN_SECRET, Server.TOKEN_EXPIRATION);
+        var token = TokenService.getInstance().createToken(user.get(), Server.tokenSecret, Server.tokenExpiration);
 
         logger.debug("Respuesta enviada: " + token);
         out.println(gson.toJson(new Response<>(Response.Status.TOKEN, token, LocalDateTime.now().toString())));
@@ -142,7 +142,7 @@ public class ClientHandler extends Thread {
     private void processFindAll(Request request) {
         logger.debug("Petición de obtener todos los funkos recibida: " + request);
         var token = request.token();
-        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+        if (tokenService.verifyToken(token, Server.tokenSecret)) {
             logger.debug("Token válido");
             funkosService.findAll().collectList().subscribe(funkos -> {
                 logger.debug("Enviando respuesta: " + funkos);
@@ -158,7 +158,7 @@ public class ClientHandler extends Thread {
     private void processFindByCode(Request<String> request) {
         logger.debug("Petición de obtener un funko por código recibida: " + request);
         var token = request.token();
-        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+        if (tokenService.verifyToken(token, Server.tokenSecret)) {
             logger.debug("Token válido");
             var cod = request.content();
             funkosService.findByCodigo(cod).subscribe(funko -> {
@@ -178,7 +178,7 @@ public class ClientHandler extends Thread {
     private void processFindByModelo(Request<Modelo> request) {
         logger.debug("Petición de obtener un funko por modelo recibida: " + request);
         var token = request.token();
-        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+        if (tokenService.verifyToken(token, Server.tokenSecret)) {
             logger.debug("Token válido");
             Modelo modelo = Modelo.valueOf(String.valueOf(request.content()));
             System.out.println(modelo);
@@ -199,7 +199,7 @@ public class ClientHandler extends Thread {
     private void processByReleaseDate(Request<LocalDate> request) {
         logger.debug("Petición de obtener un funko por fecha de lanzamiento recibida: " + request);
         var token = request.token();
-        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+        if (tokenService.verifyToken(token, Server.tokenSecret)) {
             logger.debug("Token válido");
             LocalDate fecha = LocalDate.parse(String.valueOf(request.content()));
             funkosService.findByReleaseDate(fecha).collectList().subscribe(funkos -> {
@@ -218,7 +218,7 @@ public class ClientHandler extends Thread {
     private void processInsert(Request<String> request) {
         logger.debug("Petición de insertar un registro recibida: " + request);
         var token = request.token();
-        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+        if (tokenService.verifyToken(token, Server.tokenSecret)) {
             logger.debug("Token válido");
             var funkoJson = gson.fromJson(request.content(), Funko.class);
 
@@ -238,7 +238,7 @@ public class ClientHandler extends Thread {
     private void processUpdate(Request<Funko> request) {
         logger.debug("Petición de actualizar un registro recibida: " + request);
         var token = request.token();
-        if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+        if (tokenService.verifyToken(token, Server.tokenSecret)) {
             logger.debug("Token válido");
             var funkoJson = gson.fromJson(String.valueOf(request.content()), Funko.class);
             funkosService.updateWithNoNotifications(funkoJson).subscribe(funkoUpdate -> {
@@ -258,8 +258,8 @@ public class ClientHandler extends Thread {
         logger.debug("Petición de borrar un registro recibida: " + request);
         var token = request.token();
         //verificar que el role del usuario es admin
-        if (tokenService.verifyAdmin(token, Server.TOKEN_SECRET)) {
-            if (tokenService.verifyToken(token, Server.TOKEN_SECRET)) {
+        if (tokenService.verifyAdmin(token, Server.tokenSecret)) {
+            if (tokenService.verifyToken(token, Server.tokenSecret)) {
                 logger.debug("Token válido");
                 var id = request.content();
                 long idLong = Long.parseLong(String.valueOf(id));
