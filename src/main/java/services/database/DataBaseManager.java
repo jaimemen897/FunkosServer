@@ -7,22 +7,18 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
-import routes.Routes;
-
 import java.io.*;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static io.r2dbc.spi.ConnectionFactoryOptions.*;
-import static routes.Routes.CREATE_SQL_FILE;
-import static routes.Routes.REMOVE_SQL_FILE;
 
 @Getter
 public class DataBaseManager {
     private static DataBaseManager instance;
     private static boolean initDataBase = false;
-    private final Routes routes = Routes.getInstance();
+
     private final Logger logger = LoggerFactory.getLogger(DataBaseManager.class);
     private final ConnectionFactory connectionFactory;
     private final ConnectionPool pool;
@@ -81,9 +77,9 @@ public class DataBaseManager {
 
     public synchronized void startTables() {
         logger.debug("Borrando tablas");
-        executeScripts(REMOVE_SQL_FILE).block();
+        executeScripts("delete.sql").block();
         logger.debug("Creando tablas");
-        executeScripts(CREATE_SQL_FILE).block();
+        executeScripts("init.sql").block();
         logger.debug("Tablas creadas");
     }
 
@@ -94,9 +90,13 @@ public class DataBaseManager {
                 connection -> {
                     String scriptContent;
                     try {
-                        try (InputStream inputStream = new FileInputStream(script)) {
-                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-                                scriptContent = reader.lines().collect(Collectors.joining("\n"));
+                        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(script)) {
+                            if (inputStream == null) {
+                                throw new FileNotFoundException("No se encuentra el fichero " + script);
+                            } else {
+                                try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                                    scriptContent = reader.lines().collect(Collectors.joining("\n"));
+                                }
                             }
                         }
                         Statement statement = connection.createStatement(scriptContent);

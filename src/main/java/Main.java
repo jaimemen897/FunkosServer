@@ -2,7 +2,6 @@ import controllers.FunkoController;
 import exceptions.file.ErrorInFile;
 import exceptions.file.NotFoundFile;
 import repositories.funkos.FunkoRepositoryImpl;
-import routes.Routes;
 import services.database.DataBaseManager;
 import services.funkos.FunkosNotificationsImpl;
 import services.funkos.FunkosServiceImpl;
@@ -14,7 +13,6 @@ public class Main {
         FunkoRepositoryImpl funkoRepository = FunkoRepositoryImpl.getInstance(dataBaseManager);
         FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(funkoRepository, notifications);
         FunkoController funkoController = FunkoController.getInstance();
-        Routes routes = Routes.getInstance();
 
         notifications.getNotificationAsFlux().subscribe(
                 notification -> {

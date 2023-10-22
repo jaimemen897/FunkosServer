@@ -19,15 +19,14 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Server {
-
     public static final int PUERTO = 3000;
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private static final AtomicLong clientNumber = new AtomicLong(0);
     private static final FunkosServiceImpl funkosService = FunkosServiceImpl.getInstance(FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance()), FunkosNotificationsImpl.getInstance());
-    static String tokenSecret;
-    static long tokenExpiration;
     private static final String KEYFILE = "keyFile";
     private static final String KEYPASSWORD = "keyPassword";
+    static String tokenSecret;
+    static long tokenExpiration;
 
     public static Map<String, String> readEnv() {
         try {
@@ -64,12 +63,12 @@ public class Server {
         }
     }
 
-    public static void configureServer(Map<String, String> config) {
+    public void configureServer(Map<String, String> config) {
         System.setProperty("javax.net.ssl.keyStore", config.get(KEYFILE));
         System.setProperty("javax.net.ssl.keyStorePassword", config.get(KEYPASSWORD));
     }
 
-    public static void startServer() {
+    public void startServer() {
         try {
             funkosService.importFromCsvNoNotify();
             var config = readEnv();
@@ -83,17 +82,15 @@ public class Server {
     }
 
     @SuppressWarnings("all")
-    private static void runServer() throws IOException {
-        try {
-            while (true) {
+    private void runServer() throws IOException {
+        while (true) {
+            try {
                 new ClientHandler(createServerSocket().accept(), clientNumber.getAndIncrement()).start();
-            }
-        } catch (IOException e) {
-            logger.error("🔴 Error al iniciar la conexión: {}", e.getLocalizedMessage());
+            } catch (Exception e) {}
         }
     }
 
-    private static SSLServerSocket createServerSocket() throws IOException {
+    private SSLServerSocket createServerSocket() throws IOException {
         SSLServerSocketFactory serverFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         SSLServerSocket serverSocket = (SSLServerSocket) serverFactory.createServerSocket(PUERTO);
 
@@ -103,6 +100,6 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        startServer();
+        new Server().startServer();
     }
 }

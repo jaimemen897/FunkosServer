@@ -25,10 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static common.Request.Type.*;
 
@@ -36,6 +33,12 @@ public class Client {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private static final String HOST = "localhost";
     private static final int PORT = 3000;
+    private static final String RECEIVED_RESPONSE = "Respuesta recibida: {}";
+    private static final String RECEIVED_RESPONSE_TYPE = "Respuesta recibida de tipo: {}";
+    private static final String KEY_FILE = "keyFile";
+    private static final String KEY_PASSWORD = "keyPassword";
+    private static final String ERROR_MSG = "🔴 Error: {}";
+    private static final String UNEXPECTED_TYPE_RESPONSE = "Tipo de respuesta no esperado: {}";
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Funko.class, new FunkoAdapter())
             .registerTypeAdapter(LocalDate.class, new LocalDateAdapter2())
@@ -45,12 +48,6 @@ public class Client {
     private PrintWriter out;
     private BufferedReader in;
     private String token;
-    private static final String RECEIVED_RESPONSE = "Respuesta recibida: {}";
-    private static final String RECEIVED_RESPONSE_TYPE = "Respuesta recibida de tipo: {}";
-    private static final String KEY_FILE = "keyFile";
-    private static final String KEY_PASSWORD = "keyPassword";
-    private static final String ERROR_MSG = "🔴 Error: {}";
-    private static final String UNEXPECTED_TYPE_RESPONSE = "Tipo de respuesta no esperado: {}";
 
     public static void main(String[] args) {
         Client client = new Client();
@@ -89,7 +86,7 @@ public class Client {
             sendRequestSalir();
 
         } catch (IOException e) {
-            logger.error("Error al abrir la conexión: {}", e.getLocalizedMessage());
+            logger.error("Error al abrir la conexión: {}", e.getMessage());
             logger.info("🔴 Error al abrir la conexión");
             closeConnection();
             System.exit(1);
