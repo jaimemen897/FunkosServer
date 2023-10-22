@@ -65,23 +65,23 @@ public class Client {
 
             sendRequestLogin();
 
-            sendRequestFindAll();
+            sendRequestGetAll();
 
-            sendRequestFindByCode(UUID.fromString("f8f7ae42-5b01-4d3b-82ab-02d1a2d6e443"));
+            sendRequestGetByCode(UUID.fromString("f8f7ae42-5b01-4d3b-82ab-02d1a2d6e443"));
 
             sendRequestDelete("1");
 
-            sendRequestFindByModelo(Modelo.DISNEY);
+            sendRequestGetByModelo(Modelo.DISNEY);
 
             Funko funko = Funko.builder().cod(UUID.randomUUID()).id2(95L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
 
-            sendRequestInsert(funko);
+            sendRequestPost(funko);
 
             Funko funko1 = Funko.builder().cod(UUID.randomUUID()).id2(90L).nombre("Simba").modelo(Modelo.DISNEY).precio(60.0).fechaLanzamiento(LocalDate.parse("2023-10-21")).build();
 
-            sendRequestUpdate(funko1);
+            sendRequestPut(funko1);
 
-            sendRequestByRelease(LocalDate.of(2022, 5, 1));
+            sendRequestGetByRelease(LocalDate.of(2022, 5, 1));
 
             sendRequestSalir();
 
@@ -172,8 +172,8 @@ public class Client {
         }
     }
 
-    private void sendRequestFindAll() throws IOException, ClientException {
-        Request<List<Funko>> request = new Request<>(FINDALL, null, token, LocalDateTime.now().toString());
+    private void sendRequestGetAll() throws IOException, ClientException {
+        Request<List<Funko>> request = new Request<>(GETALL, null, token, LocalDateTime.now().toString());
         sendRequest(request);
 
         Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
@@ -188,8 +188,8 @@ public class Client {
         }
     }
 
-    private void sendRequestFindByCode(UUID cod) throws IOException, ClientException {
-        Request<UUID> request = new Request<>(FINDBYCODE, cod, token, LocalDateTime.now().toString());
+    private void sendRequestGetByCode(UUID cod) throws IOException, ClientException {
+        Request<UUID> request = new Request<>(GETBYCODE, cod, token, LocalDateTime.now().toString());
         sendRequest(request);
 
         Response<UUID> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
@@ -206,8 +206,8 @@ public class Client {
         }
     }
 
-    private void sendRequestFindByModelo(Modelo modelo) throws ClientException, IOException {
-        Request<Modelo> request = new Request<>(FINDBYMODELO, modelo, token, LocalDateTime.now().toString());
+    private void sendRequestGetByModelo(Modelo modelo) throws ClientException, IOException {
+        Request<Modelo> request = new Request<>(GETBYMODELO, modelo, token, LocalDateTime.now().toString());
         sendRequest(request);
 
         Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
@@ -222,8 +222,8 @@ public class Client {
         }
     }
 
-    private void sendRequestByRelease(LocalDate release) throws ClientException, IOException {
-        Request<LocalDate> request = new Request<>(FINDBYRELEASEDATE, release, token, LocalDateTime.now().toString());
+    private void sendRequestGetByRelease(LocalDate release) throws ClientException, IOException {
+        Request<LocalDate> request = new Request<>(GETBYRELEASEDATE, release, token, LocalDateTime.now().toString());
         sendRequest(request);
 
         Response<List<Funko>> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
@@ -239,9 +239,9 @@ public class Client {
         }
     }
 
-    private void sendRequestInsert(Funko funko) throws ClientException, IOException {
+    private void sendRequestPost(Funko funko) throws ClientException, IOException {
         var funkoJson = gson.toJson(funko);
-        Request<String> request = new Request<>(INSERT, funkoJson, token, LocalDateTime.now().toString());
+        Request<String> request = new Request<>(POST, funkoJson, token, LocalDateTime.now().toString());
         sendRequest(request);
 
         Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {
@@ -258,9 +258,9 @@ public class Client {
         }
     }
 
-    private void sendRequestUpdate(Funko funko) throws ClientException, IOException {
+    private void sendRequestPut(Funko funko) throws ClientException, IOException {
         var funkoJson = gson.toJson(funko);
-        Request<String> request = new Request<>(UPDATE, funkoJson, token, LocalDateTime.now().toString());
+        Request<String> request = new Request<>(PUT, funkoJson, token, LocalDateTime.now().toString());
         sendRequest(request);
 
         Response<Funko> response = gson.fromJson(in.readLine(), new TypeToken<Response<?>>() {

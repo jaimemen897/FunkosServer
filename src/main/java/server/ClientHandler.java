@@ -114,12 +114,12 @@ public class ClientHandler extends Thread {
         logger.debug("Procesando petición del cliente nº: {}", clientNumber);
         switch (request.type()) {
             case LOGIN -> processLogin((Request<String>) request);
-            case FINDALL -> processFindAll((Request<List<Funko>>) request);
-            case FINDBYCODE -> processFindByCode((Request<String>) request);
-            case FINDBYMODELO -> processFindByModelo((Request<Modelo>) request);
-            case FINDBYRELEASEDATE -> processByReleaseDate((Request<LocalDate>) request);
-            case INSERT -> processInsert((Request<String>) request);
-            case UPDATE -> processUpdate((Request<Funko>) request);
+            case GETALL -> processGetAll((Request<List<Funko>>) request);
+            case GETBYCODE -> processGetByCode((Request<String>) request);
+            case GETBYMODELO -> processGetByModelo((Request<Modelo>) request);
+            case GETBYRELEASEDATE -> processGetByReleaseDate((Request<LocalDate>) request);
+            case POST -> processPost((Request<String>) request);
+            case PUT -> processPut((Request<Funko>) request);
             case DELETE -> processDelete((Request<String>) request);
             case EXIT -> processExit();
             default -> new Response<>(ERROR, "Petición no válida", LocalDateTime.now().toString());
@@ -145,7 +145,7 @@ public class ClientHandler extends Thread {
         out.println(gson.toJson(new Response<>(Response.Status.TOKEN, token, LocalDateTime.now().toString())));
     }
 
-    private void processFindAll(Request<List<Funko>> request) {
+    private void processGetAll(Request<List<Funko>> request) {
         logger.debug("Petición de obtener todos los funkos recibida: {}", request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.tokenSecret)) {
@@ -161,7 +161,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processFindByCode(Request<String> request) {
+    private void processGetByCode(Request<String> request) {
         logger.debug("Peticion de obtener un funko por codigo recibida: {}", request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.tokenSecret)) {
@@ -181,7 +181,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processFindByModelo(Request<Modelo> request) {
+    private void processGetByModelo(Request<Modelo> request) {
         logger.debug("Petición de obtener un funko por modelo recibida: {}", request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.tokenSecret)) {
@@ -202,7 +202,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processByReleaseDate(Request<LocalDate> request) {
+    private void processGetByReleaseDate(Request<LocalDate> request) {
         logger.debug("Petición de obtener un funko por fecha de lanzamiento recibida: {}", request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.tokenSecret)) {
@@ -221,7 +221,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processInsert(Request<String> request) {
+    private void processPost(Request<String> request) {
         logger.debug("Petición de insertar un registro recibida: {}", request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.tokenSecret)) {
@@ -241,7 +241,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void processUpdate(Request<Funko> request) {
+    private void processPut(Request<Funko> request) {
         logger.debug("Petición de actualizar un registro recibida: {}", request);
         var token = request.token();
         if (tokenService.verifyToken(token, Server.tokenSecret)) {
