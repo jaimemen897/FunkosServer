@@ -111,8 +111,8 @@ class FunkosServiceImplTest {
         when(repository.findById(1L)).thenReturn(Mono.empty());
 
         var result = assertThrows(Exception.class, () -> service.findById(1L).blockOptional());
-        System.out.println(result.getMessage());
-        assertTrue(result.getMessage().contains("exceptions.Funko.FunkoNotFoundException: Funko con ID: 1 no encontrado"));
+
+        assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: Funko con ID: 1 no encontrado"));
 
         verify(repository, times(1)).findById(1L);
     }
@@ -168,8 +168,8 @@ class FunkosServiceImplTest {
         when(repository.findById(1L)).thenReturn(Mono.empty());
 
         var result = assertThrows(Exception.class, () -> service.updateWithNoNotifications(funko).block());
-        System.out.println(result.getMessage());
-        assertTrue(result.getMessage().contains("exceptions.Funko.FunkoNotFoundException: Funko con id 1 no encontrado"));
+
+        assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: Funko con id 1 no encontrado"));
 
         verify(repository, times(1)).findById(1L);
     }
@@ -189,12 +189,12 @@ class FunkosServiceImplTest {
 
     @Test
     void deleteByIdNoExiste() {
-        var funko = Funko.builder().cod(UUID.randomUUID()).id2(100L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
-        when(repository.findById(100L)).thenReturn(Mono.empty());
+        var funko = Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
+        when(repository.findById(1L)).thenReturn(Mono.empty());
 
         var result = assertThrows(Exception.class, () -> service.deleteByIdWithoutNotification(1L).block());
         System.out.println(result.getMessage());
-        assertTrue(result.getMessage().contains("exceptions.Funko.FunkoNotFoundException: Funko con id 1 no encontrado"));
+        assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: Funko con id 1 no encontrado"));
 
         verify(repository, times(1)).findById(1L);
     }
