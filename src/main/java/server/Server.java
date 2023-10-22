@@ -3,7 +3,7 @@ package server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import repositories.funkos.FunkoRepositoryImpl;
-import services.PropertiesReader;
+import server.services.PropertiesReader;
 import services.database.DataBaseManager;
 import services.funkos.FunkosNotificationsImpl;
 import services.funkos.FunkosServiceImpl;
