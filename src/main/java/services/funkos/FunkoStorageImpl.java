@@ -40,7 +40,6 @@ public class FunkoStorageImpl implements FunkoStorage {
     @Override
     public Flux<Funko> loadCsv() {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("funkos.csv");
-        System.out.println(Objects.requireNonNull(getClass().getClassLoader().getResource("funkos.csv")).getPath());
         if (inputStream == null) {
             throw new NotFoundFile("No se ha encontrado el archivo");
         }

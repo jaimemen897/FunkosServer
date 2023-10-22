@@ -29,23 +29,12 @@ dependencies {
     implementation("org.mindrot:jbcrypt:0.4")
 }
 
-
-
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "server/Server"
     }
-
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDirs("src/main/resources")
-        }
-    }
 }
 
 tasks.test {

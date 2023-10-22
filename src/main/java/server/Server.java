@@ -14,10 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Server {
@@ -30,13 +28,12 @@ public class Server {
     static String tokenSecret;
     static long tokenExpiration;
 
-    public Map<String, String> readEnv() {
+    public static Map<String, String> readEnv() {
         try {
             logger.debug("Leyendo el fichero de propiedades");
             PropertiesReader properties = new PropertiesReader("server.properties");
 
-            String keyFile = Objects.requireNonNull(getClass().getClassLoader().getResource("server_keystore.p12")).getPath().substring(1);
-            System.out.println(keyFile);
+            String keyFile = properties.getProperty(KEYFILE);
             String keyPassword = properties.getProperty(KEYPASSWORD);
             tokenSecret = properties.getProperty("tokenSecret");
             tokenExpiration = Long.parseLong(properties.getProperty("tokenExpiration"));
@@ -86,12 +83,10 @@ public class Server {
 
     @SuppressWarnings("all")
     private void runServer() throws IOException {
-        try {
-            while (true) {
+        while (true) {
+            try {
                 new ClientHandler(createServerSocket().accept(), clientNumber.getAndIncrement()).start();
-            }
-        } catch (IOException e) {
-            logger.error("🔴 Error al iniciar la conexión: {}", e.getLocalizedMessage());
+            } catch (Exception e) {}
         }
     }
 

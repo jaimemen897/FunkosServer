@@ -24,6 +24,7 @@ WORKDIR /app
 
 # Copia el archivo .jar de la etapa de compilación
 COPY --from=build /app/build/libs/*.jar mi-aplicacion.jar
+COPY --from=build /app/cert cert
 
 # Define el comando para ejecutar tu aplicación
 ENTRYPOINT ["java","-jar","mi-aplicacion.jar"]
