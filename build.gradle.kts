@@ -21,6 +21,8 @@ dependencies {
     implementation("io.projectreactor:reactor-core:3.5.10")
     implementation("org.mybatis:mybatis:3.5.13")
     implementation("com.h2database:h2:2.1.210")
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation("org.slf4j:slf4j-api:2.0.9")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("com.google.code.gson:gson:2.10.1")
@@ -28,6 +30,15 @@ dependencies {
     implementation("com.auth0:java-jwt:4.2.1")
     // BCcrypt
     implementation("org.mindrot:jbcrypt:0.4")
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "Main"
+    }
+
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.test {
