@@ -17,6 +17,7 @@ import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class FunkoStorageImpl implements FunkoStorage {
@@ -39,7 +40,7 @@ public class FunkoStorageImpl implements FunkoStorage {
     @Override
     public Flux<Funko> loadCsv() {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("funkos.csv");
-
+        System.out.println(Objects.requireNonNull(getClass().getClassLoader().getResource("funkos.csv")).getPath());
         if (inputStream == null) {
             throw new NotFoundFile("No se ha encontrado el archivo");
         }

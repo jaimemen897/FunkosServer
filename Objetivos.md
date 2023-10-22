@@ -1,6 +1,7 @@
 - Cosas pendientes: por qué en clientHandler se le pasa un Funko al método update y un String al insert
 - Cambiar los nombres de los métodos
 - Borrar la clase routes, o buscar utilidad
+- Cambiar el método verifyAdmin y no incluir el rol en el token
 
 - [x] Estructura funkos csv
 

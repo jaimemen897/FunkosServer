@@ -25,10 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static common.Request.Type.*;
 
@@ -89,7 +86,7 @@ public class Client {
             sendRequestSalir();
 
         } catch (IOException e) {
-            logger.error("Error al abrir la conexión: {}", e.getLocalizedMessage());
+            logger.error("Error al abrir la conexión: {}", e.getMessage());
             logger.info("🔴 Error al abrir la conexión");
             closeConnection();
             System.exit(1);
@@ -312,7 +309,7 @@ public class Client {
                 throw new IllegalStateException("Hay errores al procesar el fichero de propiedades o una de ellas está vacía");
             }
 
-            if (!Files.exists(Path.of(getClass().getClassLoader().getResourceAsStream(keyFileProperties).toString()))) {
+            if (!Files.exists(Path.of(keyFileProperties))) {
                 throw new FileNotFoundException("No se encuentra el fichero de la clave");
             }
 

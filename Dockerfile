@@ -8,6 +8,7 @@ COPY build.gradle.kts .
 COPY gradlew .
 COPY gradle gradle
 COPY src src
+COPY cert cert
 # Instala Gradle en la imagen
 RUN gradle wrapper --gradle-version 8.4
 

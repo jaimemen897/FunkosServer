@@ -14,12 +14,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Server {
-
     public static final int PUERTO = 3000;
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private static final AtomicLong clientNumber = new AtomicLong(0);
@@ -29,12 +30,13 @@ public class Server {
     static String tokenSecret;
     static long tokenExpiration;
 
-    public static Map<String, String> readEnv() {
+    public Map<String, String> readEnv() {
         try {
             logger.debug("Leyendo el fichero de propiedades");
             PropertiesReader properties = new PropertiesReader("server.properties");
 
-            String keyFile = properties.getProperty(KEYFILE);
+            String keyFile = Objects.requireNonNull(getClass().getClassLoader().getResource("server_keystore.p12")).getPath().substring(1);
+            System.out.println(keyFile);
             String keyPassword = properties.getProperty(KEYPASSWORD);
             tokenSecret = properties.getProperty("tokenSecret");
             tokenExpiration = Long.parseLong(properties.getProperty("tokenExpiration"));
@@ -64,12 +66,12 @@ public class Server {
         }
     }
 
-    public static void configureServer(Map<String, String> config) {
+    public void configureServer(Map<String, String> config) {
         System.setProperty("javax.net.ssl.keyStore", config.get(KEYFILE));
         System.setProperty("javax.net.ssl.keyStorePassword", config.get(KEYPASSWORD));
     }
 
-    public static void startServer() {
+    public void startServer() {
         try {
             funkosService.importFromCsvNoNotify();
             var config = readEnv();
@@ -83,7 +85,7 @@ public class Server {
     }
 
     @SuppressWarnings("all")
-    private static void runServer() throws IOException {
+    private void runServer() throws IOException {
         try {
             while (true) {
                 new ClientHandler(createServerSocket().accept(), clientNumber.getAndIncrement()).start();
@@ -93,7 +95,7 @@ public class Server {
         }
     }
 
-    private static SSLServerSocket createServerSocket() throws IOException {
+    private SSLServerSocket createServerSocket() throws IOException {
         SSLServerSocketFactory serverFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         SSLServerSocket serverSocket = (SSLServerSocket) serverFactory.createServerSocket(PUERTO);
 
@@ -103,6 +105,6 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        startServer();
+        new Server().startServer();
     }
 }
