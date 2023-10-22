@@ -7,7 +7,6 @@ import models.IdGenerator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import repositories.funkos.FunkoRepositoryImpl;
-import routes.Routes;
 import services.database.DataBaseManager;
 import services.funkos.FunkosNotifications;
 import services.funkos.FunkosNotificationsImpl;
@@ -20,14 +19,14 @@ import java.util.Map;
 public class FunkoController {
     private static final FunkoController instance = new FunkoController();
     private final IdGenerator idGenerator;
-    private final Routes routes;
+
     private final FunkoRepositoryImpl funkoRepository;
     private final FunkosNotifications notification;
     private final FunkosServiceImpl funkosService;
 
     private FunkoController() {
         idGenerator = IdGenerator.getInstance();
-        routes = Routes.getInstance();
+
         funkoRepository = FunkoRepositoryImpl.getInstance(DataBaseManager.getInstance());
         notification = FunkosNotificationsImpl.getInstance();
         funkosService = FunkosServiceImpl.getInstance(funkoRepository, notification);

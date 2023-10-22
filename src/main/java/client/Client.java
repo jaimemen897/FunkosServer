@@ -312,7 +312,7 @@ public class Client {
                 throw new IllegalStateException("Hay errores al procesar el fichero de propiedades o una de ellas está vacía");
             }
 
-            if (!Files.exists(Path.of(keyFileProperties))) {
+            if (!Files.exists(Path.of(getClass().getClassLoader().getResourceAsStream(keyFileProperties).toString()))) {
                 throw new FileNotFoundException("No se encuentra el fichero de la clave");
             }
 

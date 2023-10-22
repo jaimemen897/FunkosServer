@@ -9,7 +9,6 @@ public class PropertiesReader {
     private final String fileName;
     private final Properties properties;
 
-    //TODO: cambiar por la clase Routes
     public PropertiesReader(String fileName) throws IOException {
         this.fileName = fileName;
         properties = new Properties();

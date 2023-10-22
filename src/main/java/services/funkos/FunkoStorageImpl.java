@@ -12,29 +12,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import routes.Routes;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static routes.Routes.ROUTE_FUNKOS_CSV;
-
 public class FunkoStorageImpl implements FunkoStorage {
     private static FunkoStorageImpl instance;
     private final IdGenerator idGenerator;
-    private final Routes routes;
     private final Logger logger = LoggerFactory.getLogger(FunkoStorageImpl.class);
     private final List<Funko> funkos = new ArrayList<>();
 
     private FunkoStorageImpl() {
         idGenerator = IdGenerator.getInstance();
-        routes = Routes.getInstance();
     }
 
     public static FunkoStorageImpl getInstance() {
@@ -46,8 +38,13 @@ public class FunkoStorageImpl implements FunkoStorage {
 
     @Override
     public Flux<Funko> loadCsv() {
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("funkos.csv");
+
+        if (inputStream == null) {
+            throw new NotFoundFile("No se ha encontrado el archivo");
+        }
         return Flux.using(
-                () -> new BufferedReader(new FileReader(ROUTE_FUNKOS_CSV)),
+                () -> new BufferedReader(new InputStreamReader(inputStream)),
                 br -> Flux.fromStream(br.lines().skip(1).map(line -> {
                     String[] split = line.split(",");
 
@@ -71,7 +68,7 @@ public class FunkoStorageImpl implements FunkoStorage {
                     try {
                         br.close();
                     } catch (IOException e) {
-                        throw new NotFoundFile("No se ha encontrado el archivo");
+                        throw new ErrorInFile("Error al cerrar el archivo CSV: " + e.getMessage());
                     }
                 });
     }
