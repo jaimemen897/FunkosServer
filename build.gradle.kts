@@ -25,7 +25,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("com.auth0:java-jwt:4.2.1")
+    implementation("com.auth0:java-jwt:4.3.0")
     implementation("org.mindrot:jbcrypt:0.4")
 }
 
