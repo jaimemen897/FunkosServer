@@ -14,6 +14,7 @@ import repositories.funkos.FunkoRepositoryImpl;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -115,6 +116,107 @@ class FunkosServiceImplTest {
         assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: Funko con ID: 1 no encontrado"));
 
         verify(repository, times(1)).findById(1L);
+    }
+
+    @Test
+    void findBycodigo() {
+        var funko = Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
+
+        when(repository.findByCodigo(funko.getCod().toString())).thenReturn(Mono.just(funko));
+        var result = service.findByCodigo(funko.getCod().toString()).blockOptional();
+
+        assertAll("findByCodigo"
+                , () -> assertTrue(result.isPresent())
+                , () -> assertEquals("Rayo McQueen", result.get().getNombre())
+                , () -> assertEquals(100.0, result.get().getPrecio())
+                , () -> assertEquals(LocalDate.parse("2021-10-07"), result.get().getFechaLanzamiento())
+                , () -> assertEquals(Modelo.DISNEY, result.get().getModelo())
+                , () -> assertEquals(1L, result.get().getId2())
+                , () -> assertNotNull(result.get().getCod())
+        );
+
+        verify(repository, times(1)).findByCodigo(funko.getCod().toString());
+    }
+
+    @Test
+    void findBycodigoNoExiste() {
+        var funko = Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2024-10-07")).build();
+
+        when(repository.findByCodigo(funko.getCod().toString())).thenReturn(Mono.empty());
+
+        var result = assertThrows(Exception.class, () -> service.findByCodigo(funko.getCod().toString()).blockOptional());
+
+        assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: No se ha encontrado ningún funko con el código: " + funko.getCod().toString()));
+
+        verify(repository, times(1)).findByCodigo(funko.getCod().toString());
+    }
+
+    @Test
+    void findByReleaseDate() {
+        var funko = Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
+
+        when(repository.findByReleaseDate(LocalDate.parse("2021-10-07"))).thenReturn(Flux.just(funko));
+        var result = service.findByReleaseDate(LocalDate.parse("2021-10-07")).collectList().block();
+
+        assertAll("findByReleaseDate"
+                , () -> assertNotNull(result)
+                , () -> assertEquals(1, result.size())
+                , () -> assertEquals("Rayo McQueen", result.get(0).getNombre())
+                , () -> assertEquals(100.0, result.get(0).getPrecio())
+                , () -> assertEquals(LocalDate.parse("2021-10-07"), result.get(0).getFechaLanzamiento())
+                , () -> assertEquals(Modelo.DISNEY, result.get(0).getModelo())
+                , () -> assertEquals(1L, result.get(0).getId2())
+                , () -> assertNotNull(result.get(0).getCod())
+        );
+
+        verify(repository, times(1)).findByReleaseDate(LocalDate.parse("2021-10-07"));
+    }
+
+    @Test
+    void findByReleaseDateNoExiste() {
+        var funko = Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2024-10-07")).build();
+
+        when(repository.findByReleaseDate(LocalDate.parse("2024-10-07"))).thenReturn(Flux.empty());
+
+        var result = assertThrows(Exception.class, () -> service.findByReleaseDate(LocalDate.parse("2024-10-07")).collectList().block());
+
+       assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: No se ha encontrado ningún funko con la fecha de lanzamiento: 2024-10-07"));
+
+       verify(repository, times(1)).findByReleaseDate(LocalDate.parse("2024-10-07"));
+    }
+
+    @Test
+    void findByModelo() {
+        var funko = Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
+
+        when(repository.findByModelo(Modelo.DISNEY)).thenReturn(Flux.just(funko));
+        var result = service.findByModelo(Modelo.DISNEY).collectList().block();
+
+        assertAll("findByModelo"
+                , () -> assertNotNull(result)
+                , () -> assertEquals(1, result.size())
+                , () -> assertEquals("Rayo McQueen", result.get(0).getNombre())
+                , () -> assertEquals(100.0, result.get(0).getPrecio())
+                , () -> assertEquals(LocalDate.parse("2021-10-07"), result.get(0).getFechaLanzamiento())
+                , () -> assertEquals(Modelo.DISNEY, result.get(0).getModelo())
+                , () -> assertEquals(1L, result.get(0).getId2())
+                , () -> assertNotNull(result.get(0).getCod())
+        );
+
+        verify(repository, times(1)).findByModelo(Modelo.DISNEY);
+    }
+
+    @Test
+    void findByModeloNoExiste() {
+        var funko = Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2024-10-07")).build();
+
+        when(repository.findByModelo(Modelo.DISNEY)).thenReturn(Flux.empty());
+
+        var result = assertThrows(Exception.class, () -> service.findByModelo(Modelo.DISNEY).collectList().block());
+
+        assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: No se ha encontrado ningún funko con el modelo: DISNEY"));
+
+        verify(repository, times(1)).findByModelo(Modelo.DISNEY);
     }
 
 
