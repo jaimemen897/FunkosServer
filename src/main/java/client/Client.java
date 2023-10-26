@@ -1,7 +1,7 @@
 package client;
 
 import adapters.FunkoAdapter;
-import adapters.LocalDateAdapter2;
+import adapters.LocalDateAdapter;
 import adapters.LocalDateTimeAdapter;
 import adapters.UuidAdapter;
 import com.google.gson.Gson;
@@ -41,7 +41,7 @@ public class Client {
     private static final String UNEXPECTED_TYPE_RESPONSE = "Tipo de respuesta no esperado: {}";
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Funko.class, new FunkoAdapter())
-            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter2())
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .registerTypeAdapter(UUID.class, new UuidAdapter()).create();
     private SSLSocket socket;
@@ -137,7 +137,7 @@ public class Client {
     }
 
     private void sendRequestLogin() throws ClientException, IOException {
-        var loginJson = gson.toJson(new Login("user", "user"));
+        var loginJson = gson.toJson(new Login("admin", "admin"));
         Request<String> request = new Request<>(LOGIN, loginJson, token, LocalDateTime.now().toString());
         sendRequest(request);
 

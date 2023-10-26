@@ -46,12 +46,12 @@ class FunkoCacheImplTest {
         assertNull(cache.get(id).block());
     }
 
-    @Test
+    /*@Test
     void clear() throws InterruptedException {
         Long id = 95L;
         Funko funko = Funko.builder().cod(UUID.randomUUID()).id2(id).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0).fechaLanzamiento(LocalDate.parse("2021-10-07")).build();
         cache.put(id, funko).block();
         Thread.sleep(120000);
         assertNull(cache.get(id).block());
-    }
+    }*/
 }

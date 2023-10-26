@@ -311,4 +311,185 @@ class FunkosServiceImplTest {
 
         verify(repository, times(1)).deleteAll();
     }
+
+    @Test
+    void testExpensiveFunko(){
+        var funkos = List.of(
+                Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
+                        .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
+                Funko.builder().cod(UUID.randomUUID()).id2(2L).nombre("Mate").modelo(Modelo.DISNEY).precio(90.0)
+                        .fechaLanzamiento(LocalDate.parse("2023-10-07")).build()
+        );
+
+        when(repository.findAll()).thenReturn(Flux.fromIterable(funkos));
+        var result = service.expensiveFunko().blockOptional();
+
+        assertAll("expensiveFunko",
+                () -> assertTrue(result.isPresent()),
+                () -> assertEquals("Rayo McQueen", result.get().getNombre()),
+                () -> assertEquals(100.0, result.get().getPrecio()),
+                () -> assertEquals(LocalDate.parse("2021-10-07"), result.get().getFechaLanzamiento()),
+                () -> assertEquals(Modelo.DISNEY, result.get().getModelo()),
+                () -> assertEquals(1L, result.get().getId2()),
+                () -> assertNotNull(result.get().getCod())
+        );
+
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testAveragePrice(){
+        var funkos = List.of(
+                Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
+                        .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
+                Funko.builder().cod(UUID.randomUUID()).id2(2L).nombre("Mate").modelo(Modelo.DISNEY).precio(90.0)
+                        .fechaLanzamiento(LocalDate.parse("2023-10-07")).build()
+        );
+
+        when(repository.findAll()).thenReturn(Flux.fromIterable(funkos));
+        var result = service.averagePrice().block();
+
+        assertEquals(95.0, result);
+
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testGroupByModelo(){
+        var funkos = List.of(
+                Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
+                        .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
+                Funko.builder().cod(UUID.randomUUID()).id2(2L).nombre("Mate").modelo(Modelo.ANIME).precio(90.0)
+                        .fechaLanzamiento(LocalDate.parse("2023-10-07")).build()
+        );
+
+        when(repository.findAll()).thenReturn(Flux.fromIterable(funkos));
+        var result = service.groupByModelo().block();
+
+        assertAll("groupByModelo",
+                () -> assertNotNull(result),
+                () -> assertEquals(1, result.get(Modelo.DISNEY).size()),
+                () -> assertEquals("Rayo McQueen", result.get(Modelo.DISNEY).get(0).getNombre()),
+                () -> assertEquals(100.0, result.get(Modelo.DISNEY).get(0).getPrecio()),
+                () -> assertEquals(LocalDate.parse("2021-10-07"), result.get(Modelo.DISNEY).get(0).getFechaLanzamiento()),
+                () -> assertEquals(Modelo.DISNEY, result.get(Modelo.DISNEY).get(0).getModelo()),
+                () -> assertEquals(1L, result.get(Modelo.DISNEY).get(0).getId2()),
+                () -> assertNotNull(result.get(Modelo.DISNEY).get(0).getCod())
+        );
+
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testFunkosByModelo(){
+        var funkos = List.of(
+                Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
+                        .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
+                Funko.builder().cod(UUID.randomUUID()).id2(2L).nombre("Mate").modelo(Modelo.ANIME).precio(90.0)
+                        .fechaLanzamiento(LocalDate.parse("2023-10-07")).build()
+        );
+
+        when(repository.findAll()).thenReturn(Flux.fromIterable(funkos));
+        var result = service.funkosByModelo().block();
+
+        assertAll("funkosByModelo",
+                () -> assertNotNull(result),
+                () -> assertEquals(1, result.get(Modelo.DISNEY)),
+                () -> assertEquals(1L, result.get(Modelo.DISNEY))
+        );
+
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testFunkosIn2023(){
+        var funkos = List.of(
+                Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
+                        .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
+                Funko.builder().cod(UUID.randomUUID()).id2(2L).nombre("Mate").modelo(Modelo.DISNEY).precio(90.0)
+                        .fechaLanzamiento(LocalDate.parse("2023-10-07")).build()
+        );
+
+        when(repository.findAll()).thenReturn(Flux.fromIterable(funkos));
+        var result = service.funkosIn2023().collectList().block();
+
+        assertAll("funkosIn2023",
+                () -> assertNotNull(result),
+                () -> assertEquals(1, result.size()),
+                () -> assertEquals("Mate", result.get(0).getNombre()),
+                () -> assertEquals(90.0, result.get(0).getPrecio()),
+                () -> assertEquals(LocalDate.parse("2023-10-07"), result.get(0).getFechaLanzamiento()),
+                () -> assertEquals(Modelo.DISNEY, result.get(0).getModelo()),
+                () -> assertEquals(2L, result.get(0).getId2()),
+                () -> assertNotNull(result.get(0).getCod())
+        );
+
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testNumberStitch(){
+        var funkos = List.of(
+                Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Stitch").modelo(Modelo.DISNEY).precio(100.0)
+                        .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
+                Funko.builder().cod(UUID.randomUUID()).id2(2L).nombre("Stitch").modelo(Modelo.DISNEY).precio(90.0)
+                        .fechaLanzamiento(LocalDate.parse("2023-10-07")).build()
+        );
+
+        when(repository.findAll()).thenReturn(Flux.fromIterable(funkos));
+        var result = service.numberStitch().block();
+
+        assertEquals(2.0, result);
+
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testFunkoStitch(){
+        var funkos = List.of(
+                Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Stitch").modelo(Modelo.DISNEY).precio(100.0)
+                        .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
+                Funko.builder().cod(UUID.randomUUID()).id2(2L).nombre("Stitch").modelo(Modelo.DISNEY).precio(90.0)
+                        .fechaLanzamiento(LocalDate.parse("2023-10-07")).build()
+        );
+
+        when(repository.findAll()).thenReturn(Flux.fromIterable(funkos));
+        var result = service.funkoStitch().collectList().block();
+
+        assertAll("funkoStitch",
+                () -> assertNotNull(result),
+                () -> assertEquals(2, result.size()),
+                () -> assertEquals("Stitch", result.get(0).getNombre()),
+                () -> assertEquals(100.0, result.get(0).getPrecio()),
+                () -> assertEquals(LocalDate.parse("2021-10-07"), result.get(0).getFechaLanzamiento()),
+                () -> assertEquals(Modelo.DISNEY, result.get(0).getModelo()),
+                () -> assertEquals(1L, result.get(0).getId2()),
+                () -> assertNotNull(result.get(0).getCod()),
+                () -> assertEquals("Stitch", result.get(1).getNombre()),
+                () -> assertEquals(90.0, result.get(1).getPrecio()),
+                () -> assertEquals(LocalDate.parse("2023-10-07"), result.get(1).getFechaLanzamiento()),
+                () -> assertEquals(Modelo.DISNEY, result.get(1).getModelo()),
+                () -> assertEquals(2L, result.get(1).getId2()),
+                () -> assertNotNull(result.get(1).getCod())
+        );
+
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testExportToJson(){
+        var funkos = List.of(
+                Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Stitch").modelo(Modelo.DISNEY).precio(100.0)
+                        .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
+                Funko.builder().cod(UUID.randomUUID()).id2(2L).nombre("Stitch").modelo(Modelo.DISNEY).precio(90.0)
+                        .fechaLanzamiento(LocalDate.parse("2023-10-07")).build()
+        );
+        when(repository.deleteAll()).thenReturn(Mono.empty());
+        when(repository.exportJson("src/main/resources/funkos.json")).thenReturn(Mono.empty());
+
+        service.exportToJson("src/main/resources/funkos.json");
+
+        verify(repository, times(1)).deleteAll();
+        verify(repository, times(1)).exportJson("src/main/resources/funkos.json");
+    }
 }
