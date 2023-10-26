@@ -1,6 +1,6 @@
 package services.funkos;
 
-import adapters.LocalDateAdapter;
+import adapters.FunkoAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import enums.Modelo;
@@ -78,7 +78,7 @@ public class FunkoStorageImpl implements FunkoStorage {
 
         return Mono.fromRunnable((() -> {
             GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(Funko.class, new LocalDateAdapter());
+            gsonBuilder.registerTypeAdapter(Funko.class, new FunkoAdapter());
             Gson gson = gsonBuilder.setPrettyPrinting().create();
 
             try (FileWriter writer = new FileWriter(ruta)) {

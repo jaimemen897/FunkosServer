@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class FunkosServiceImpl implements FunkosService {
-    private static final String NOT_FOUND = "no encontrado";
+    private static final String NOT_FOUND = " no encontrado";
     private static FunkosServiceImpl instance;
     private final FunkoCache cache;
     private final Logger logger = LoggerFactory.getLogger(FunkosServiceImpl.class);
