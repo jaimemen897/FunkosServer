@@ -7,6 +7,7 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
+
 import java.io.*;
 import java.time.Duration;
 import java.util.Properties;
@@ -16,7 +17,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.*;
 
 @Getter
 public class DataBaseManager {
-    private static DataBaseManager instance;
+    private static DataBaseManager instance = null;
     private static boolean initDataBase = false;
 
     private final Logger logger = LoggerFactory.getLogger(DataBaseManager.class);

@@ -20,13 +20,13 @@ import java.util.List;
 import java.util.UUID;
 
 public class FunkoStorageImpl implements FunkoStorage {
-    private static FunkoStorageImpl instance;
+    private static FunkoStorageImpl instance = null;
     private final IdGenerator idGenerator;
     private final Logger logger = LoggerFactory.getLogger(FunkoStorageImpl.class);
     private final List<Funko> funkos = new ArrayList<>();
 
     private FunkoStorageImpl() {
-        idGenerator = IdGenerator.getInstance();
+        idGenerator = new IdGenerator();
     }
 
     public static FunkoStorageImpl getInstance() {

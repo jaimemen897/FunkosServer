@@ -14,7 +14,6 @@ import repositories.funkos.FunkoRepositoryImpl;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -180,9 +179,9 @@ class FunkosServiceImplTest {
 
         var result = assertThrows(Exception.class, () -> service.findByReleaseDate(LocalDate.parse("2024-10-07")).collectList().block());
 
-       assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: No se ha encontrado ningún funko con la fecha de lanzamiento: 2024-10-07"));
+        assertTrue(result.getMessage().contains("exceptions.funko.FunkoNotFoundException: No se ha encontrado ningún funko con la fecha de lanzamiento: 2024-10-07"));
 
-       verify(repository, times(1)).findByReleaseDate(LocalDate.parse("2024-10-07"));
+        verify(repository, times(1)).findByReleaseDate(LocalDate.parse("2024-10-07"));
     }
 
     @Test
@@ -313,7 +312,7 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testExpensiveFunko(){
+    void testExpensiveFunko() {
         var funkos = List.of(
                 Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
                         .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
@@ -338,7 +337,7 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testAveragePrice(){
+    void testAveragePrice() {
         var funkos = List.of(
                 Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
                         .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
@@ -355,7 +354,7 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testGroupByModelo(){
+    void testGroupByModelo() {
         var funkos = List.of(
                 Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
                         .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
@@ -381,7 +380,7 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testFunkosByModelo(){
+    void testFunkosByModelo() {
         var funkos = List.of(
                 Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
                         .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
@@ -402,7 +401,7 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testFunkosIn2023(){
+    void testFunkosIn2023() {
         var funkos = List.of(
                 Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Rayo McQueen").modelo(Modelo.DISNEY).precio(100.0)
                         .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
@@ -428,7 +427,7 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testNumberStitch(){
+    void testNumberStitch() {
         var funkos = List.of(
                 Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Stitch").modelo(Modelo.DISNEY).precio(100.0)
                         .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
@@ -445,7 +444,7 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testFunkoStitch(){
+    void testFunkoStitch() {
         var funkos = List.of(
                 Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Stitch").modelo(Modelo.DISNEY).precio(100.0)
                         .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),
@@ -477,7 +476,7 @@ class FunkosServiceImplTest {
     }
 
     @Test
-    void testExportToJson(){
+    void testExportToJson() {
         var funkos = List.of(
                 Funko.builder().cod(UUID.randomUUID()).id2(1L).nombre("Stitch").modelo(Modelo.DISNEY).precio(100.0)
                         .fechaLanzamiento(LocalDate.parse("2021-10-07")).build(),

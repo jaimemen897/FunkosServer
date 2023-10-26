@@ -63,6 +63,10 @@ public class Server {
         }
     }
 
+    public static void main(String[] args) {
+        new Server().startServer();
+    }
+
     public void configureServer(Map<String, String> config) {
         System.setProperty("javax.net.ssl.keyStore", config.get(KEYFILE));
         System.setProperty("javax.net.ssl.keyStorePassword", config.get(KEYPASSWORD));
@@ -86,7 +90,8 @@ public class Server {
         while (true) {
             try {
                 new ClientHandler(createServerSocket().accept(), clientNumber.getAndIncrement()).start();
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -97,9 +102,5 @@ public class Server {
         serverSocket.setEnabledCipherSuites(new String[]{"TLS_AES_128_GCM_SHA256"});
         serverSocket.setEnabledProtocols(new String[]{"TLSv1.3"});
         return serverSocket;
-    }
-
-    public static void main(String[] args) {
-        new Server().startServer();
     }
 }
