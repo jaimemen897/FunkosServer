@@ -94,7 +94,7 @@ La clase `FunkoController` se encarga cargar los Funkos desde el CSV y de realiz
 
 ## Client
 
-Con esta clase interactuamos con un servidor a través de una conexión segura SSL para enviar y recibir solicitudes sobre Funkos, para ello tenemos los siguientes métodos:
+Con esta clase interactuamos con el servidor a través de una conexión segura SSL para enviar y recibir solicitudes sobre Funkos, para ello tenemos los siguientes métodos:
 
 - `start()`: Utilizamos este método como punto de inicio para abrir la conexión, enviar solicitudes al servidor y cerrar la conexión al finalizar.
 - `openConnection()`: Se encarga de establecer la conexión segura SSL con el servidor.
