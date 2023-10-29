@@ -14,7 +14,7 @@ RUN gradle wrapper --gradle-version 8.4
 
 # Compila y construye el proyecto, evitando la ejecución de los tests
 RUN chmod +x ./gradlew
-RUN ./gradlew build -x test
+RUN ./gradlew build
 
 # Etapa de ejecución
 FROM openjdk:17-jdk-alpine AS runtime
